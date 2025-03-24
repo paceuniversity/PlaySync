@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import './App.css';
+import './css/App.css';
 import Dashboard from './pages/Dashboard';
 
 function App() {
@@ -19,7 +19,6 @@ function App() {
 
   return (
     <>
-      <h1>PlaySync </h1>
       <QueryClientProvider client={queryClient}>
         <Routes>
           <Route path="/" element={<Dashboard />} />
