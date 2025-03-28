@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import Lottie from 'lottie-react';
+import loginAnimation from '../../assets/animations/LoginAnimation.json';
+import logo from '../../assets/PlaySyncLogo.png';
 // import toast from 'react-hot-toast';
 // import { useNavigate } from 'react-router-dom';
 
@@ -26,13 +29,25 @@ const SignIn: React.FC = () => {
     <div className="container-fluid vh-100">
       <div className="row h-100">
         {/* Left Side: Sign In Form */}
-        <div className="col-md-6 d-flex align-items-center justify-content-center">
-          <div className="w-75">
-            <h2 className="text-center mb-4">Sign In</h2>
+        <div
+          className="col-md-6 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: '#1b2838' }}
+        >
+          <div className="w-75 text-white">
+            <div className="d-flex justify-content-center align-items-center mb-5 gap-2">
+              <img
+                src={logo}
+                alt="PlaySync Logo"
+                style={{ width: '40px', height: '40px' }}
+              />
+              <h2 className="text-white m-0">PlaySync</h2>
+            </div>
+
+            <p className=" mb-4">Sign In</p>
             <form>
               {/* onSubmit={handleSubmit} */}
               <div className="mb-3 position-relative">
-                <label htmlFor="email" className="form-label">
+                <label htmlFor="email" className="form-label text-white">
                   Email
                 </label>
                 <input
@@ -47,7 +62,7 @@ const SignIn: React.FC = () => {
                 />
               </div>
               <div className="mb-3 position-relative">
-                <label htmlFor="password" className="form-label">
+                <label htmlFor="password" className="form-label text-white">
                   Password
                 </label>
                 <div className="position-relative">
@@ -72,14 +87,20 @@ const SignIn: React.FC = () => {
                   </span>
                 </div>
                 <div className="d-flex justify-content-between mt-2">
-                  <span className="form-text">
+                  <span className="form-text text-white">
                     Don't have an account?{' '}
-                    <a href="/sign-up" className="text-decoration-none">
+                    <a
+                      href="/sign-up"
+                      className="text-decoration-none text-primary"
+                    >
                       Sign Up
                     </a>
                   </span>
                   <span className="form-text">
-                    <a href="/forgot-password" className="text-decoration-none">
+                    <a
+                      href="/dashboard"
+                      className="text-decoration-none text-primary"
+                    >
                       Forgot Password?
                     </a>
                   </span>
@@ -96,14 +117,14 @@ const SignIn: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side: Media/Image */}
-        <div className="col-md-6 d-none d-md-flex align-items-center justify-content-center bg-light">
-          <img
-            src="/assets/signin-image.png"
-            alt="Sign In"
-            className="img-fluid"
-            style={{ maxWidth: '80%', height: 'auto' }}
-          />
+        {/* Right Side: Lottie Animation */}
+        <div
+          className="col-md-6 d-none d-md-flex align-items-center justify-content-center"
+          style={{ backgroundColor: '#223142' }}
+        >
+          <div style={{ width: '700px', height: '700px' }}>
+            <Lottie animationData={loginAnimation} loop autoplay />
+          </div>
         </div>
       </div>
     </div>

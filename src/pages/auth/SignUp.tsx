@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import logo from '../../assets/PlaySyncLogo.png';
+import Lottie from 'lottie-react';
+import signupAnimation from '../../assets/animations/SignUpAnimation.json';
 // import toast from 'react-hot-toast';
 // import { useNavigate } from 'react-router-dom';
 
@@ -39,10 +42,21 @@ const SignUp: React.FC = () => {
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100">
-        <div className="col-md-6 d-flex align-items-center justify-content-center">
-          <div className="w-75">
-            <h2 className="text-center mb-4">Create Account</h2>
-            <form>
+        <div
+          className="col-md-6 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: '#1b2838' }}
+        >
+          <div className="w-75 text-white">
+            <div className="d-flex justify-content-center align-items-center mb-5 gap-2">
+              <img
+                src={logo}
+                alt="PlaySync Logo"
+                style={{ width: '40px', height: '40px' }}
+              />
+              <h2 className="text-white m-0">PlaySync</h2>
+            </div>
+            <p className="text-white m-0">Create Account</p>
+            <form className="mt-3">
               {/* onSubmit={handleSubmit} */}
               <div className="mb-3 row">
                 <div className="col-md-6">
@@ -160,8 +174,8 @@ const SignUp: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="d-flex justify-content-between mt-2 mb-3">
-                <span className="form-text">
+              <div className="d-flex text-white justify-content-between mt-2 mb-3">
+                <span className="form-text text-white ">
                   Already have an account?{' '}
                   <a href="/" className="text-decoration-none">
                     Sign In
@@ -179,13 +193,13 @@ const SignUp: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-md-6 d-none d-md-flex align-items-center justify-content-center bg-light">
-          <img
-            src="/assets/signup-image.png"
-            alt="Sign Up"
-            className="img-fluid"
-            style={{ maxWidth: '80%', height: 'auto' }}
-          />
+        <div
+          className="col-md-6 d-none d-md-flex align-items-center justify-content-center"
+          style={{ backgroundColor: '#223142' }}
+        >
+          <div style={{ width: '500px', height: '500px' }}>
+            <Lottie animationData={signupAnimation} loop autoplay />
+          </div>
         </div>
       </div>
     </div>
