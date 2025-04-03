@@ -23,5 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
+# Client
+client/node_modules
+client/dist
+
+# Server
+server/node_modules
+server/dist
+server/src/firebase/playsync-firebase-admin.json
+
 # ENV
 .env
