@@ -1,43 +1,28 @@
 {
-  "name": "playsync-client",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "playsync",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm run build --prefix client && npm run build --prefix server"
   },
-  "dependencies": {
-    "@tanstack/react-query": "^5.69.0",
-    "@tanstack/react-query-devtools": "^5.69.0",
-    "axios": "^1.8.3",
-    "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3",
-    "lottie-react": "^2.4.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-hot-toast": "^2.5.2",
-    "react-icons": "^5.5.0",
-    "react-router-dom": "^7.4.0",
-    "web-vitals": "^4.2.4"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paceuniversity/cs491s2025team6.git"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/paceuniversity/cs491s2025team6/issues"
+  },
+  "homepage": "https://github.com/paceuniversity/cs491s2025team6#readme",
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
-    "@tailwindcss/postcss": "^4.0.15",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.21.0",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^15.15.0",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17",
-    "typescript": "~5.7.2",
-    "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9"
   }
 }
