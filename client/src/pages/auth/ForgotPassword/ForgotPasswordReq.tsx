@@ -1,30 +1,25 @@
 import React, { useState } from 'react';
 import Lottie from 'lottie-react';
-import loginAnimation from '../../assets/animations/LoginAnimation.json';
-import logo from '../../assets/PlaySyncLogo.png';
+import loginAnimation from '../../../assets/animations/LoginAnimation.json';
+import logo from '../../../assets/PlaySyncLogo.png';
 // import toast from 'react-hot-toast';
 // import { useNavigate } from 'react-router-dom';
 
 interface IAuthRequest {
   email: string;
-  password: string;
 }
 
-const SignIn: React.FC = () => {
+const ForgotPasswordReq: React.FC = () => {
   const [user, setUser] = useState<IAuthRequest>({
     email: '',
-    password: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
+
   //   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100">
@@ -43,7 +38,7 @@ const SignIn: React.FC = () => {
               <h2 className="text-white m-0">PlaySync</h2>
             </div>
 
-            <p className=" mb-4">Sign In</p>
+            <p className="mb-4">Forgot Password</p>
             <form>
               {/* onSubmit={handleSubmit} */}
               <div className="mb-3 position-relative">
@@ -55,38 +50,20 @@ const SignIn: React.FC = () => {
                   className="form-control"
                   id="email"
                   name="email"
-                  placeholder="Email"
+                  placeholder="Enter your account's email"
                   value={user.email}
                   onChange={handleChange}
                   required
                 />
               </div>
               <div className="mb-3 position-relative">
-                <label htmlFor="password" className="form-label text-white">
-                  Password
-                </label>
-                <div className="position-relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="form-control"
-                    id="password"
-                    name="password"
-                    placeholder="Enter your password"
-                    value={user.password}
-                    onChange={handleChange}
-                    required
-                  />
-                  <span
-                    className="position-absolute end-0 top-50 translate-middle-y me-2"
-                    onClick={togglePasswordVisibility}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <i
-                      className={showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'}
-                    ></i>
-                  </span>
-                </div>
                 <div className="d-flex justify-content-between mt-2">
+                  <span className="form-text text-white">
+                    Back to{' '}
+                    <a href="/" className="text-decoration-none text-primary">
+                      Login
+                    </a>
+                  </span>
                   <span className="form-text text-white">
                     Don't have an account?{' '}
                     <a
@@ -96,30 +73,14 @@ const SignIn: React.FC = () => {
                       Sign Up
                     </a>
                   </span>
-                  <span className="form-text">
-                    <a
-                      href="/forgot-password"
-                      className="text-decoration-none text-primary"
-                    >
-                      Forgot Password?
-                    </a>
-                  </span>
                 </div>
-                <span className="form-text">
-                  <a
-                    href="/dashboard"
-                    className="text-decoration-none text-primary"
-                  >
-                    Dashboard
-                  </a>
-                </span>
               </div>
               <button
                 type="submit"
                 className="btn btn-primary w-100"
                 // disabled={isLoading}
               >
-                {/* {isLoading ? 'Signing In...' : 'Sign In'} */}
+                {/* {isLoading ? 'Sending OTP...' : 'Send OTP'} */}
               </button>
             </form>
           </div>
@@ -139,4 +100,4 @@ const SignIn: React.FC = () => {
   );
 };
 
-export default SignIn;
+export default ForgotPasswordReq;

@@ -47,13 +47,13 @@ const Header: React.FC = () => {
           <Link to="/dashboard" className="nav-link text-dark">
             <IoHome size={28} className="text-primary" />
           </Link>
-          <Link to="/dashboard" className="nav-link text-dark">
+          <Link to="/community" className="nav-link text-dark">
             <TbWorldUpload size={28} className="text-primary" />
           </Link>
-          <Link to="/dashboard" className="nav-link text-dark">
+          <Link to="/direct-message" className="nav-link text-dark">
             <AiFillMessage size={28} className="text-primary" />
           </Link>
-          <Link to="/dashboard" className="nav-link text-dark">
+          <Link to="/profile" className="nav-link text-dark">
             <FaUserAlt size={28} className="text-primary" />
           </Link>
         </div>
