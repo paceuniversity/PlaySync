@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from '../components/Header';
+import DirectMessageComponent from '../components/DirectMessage/DirectMessageComponent';
 
 const DirectMessage = () => {
   return (
@@ -8,7 +9,9 @@ const DirectMessage = () => {
       style={{ backgroundColor: '#223142' }}
     >
       <Header />
-      <h4 className="text-4xl text-white font-bold mt-3">DirectMessage</h4>
+      <div className="flex flex-col md:flex-row gap-6 mt-4">
+        <DirectMessageComponent />
+      </div>
     </div>
   );
 };

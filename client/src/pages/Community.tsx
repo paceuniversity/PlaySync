@@ -1,5 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
+import CommunityHeader from '../components/Community/CommunityHeader';
+import CommunityFeed from '../components/Community/CommunityFeed';
 
 const Community = () => {
   return (
@@ -8,7 +10,13 @@ const Community = () => {
       style={{ backgroundColor: '#223142' }}
     >
       <Header />
-      <h4 className="text-4xl text-white font-bold mt-3">Community</h4>
+      <div className="max-w-7xl mx-auto px-4 mt-5">
+        <CommunityHeader />
+
+        <div className="flex flex-col md:flex-row gap-6 mt-4">
+          <CommunityFeed />
+        </div>
+      </div>
     </div>
   );
 };

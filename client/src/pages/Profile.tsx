@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
 import ProfileHeader from '../components/Profile/ProfileHeader';
+import ProfileFeed from '../components/Profile/ProfileFeed';
 
 const Profile = () => {
   return (
@@ -11,8 +12,7 @@ const Profile = () => {
         <ProfileHeader />
 
         <div className="flex flex-col md:flex-row gap-6 mt-4">
-          <h3 className="text-white text-xl font-semibold">User Feed</h3>
-          <p className="text-white mt-2">Coming soon...</p>
+          <ProfileFeed />
         </div>
       </div>
     </div>
