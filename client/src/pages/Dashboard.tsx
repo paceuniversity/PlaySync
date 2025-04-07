@@ -1,6 +1,6 @@
 import React from 'react';
 import Header from '../components/Header';
-
+import Products from '../components/Products';
 const Dashboard = () => {
   return (
     <div
@@ -8,7 +8,8 @@ const Dashboard = () => {
       style={{ backgroundColor: '#223142' }}
     >
       <Header />
-      <h4 className="text-4xl text-white font-bold mt-3">Dashboard</h4>
+      <h4 className="text-4x1 text-white font-bold mt-3">Dashboard</h4>
+      <Products />
     </div>
   );
 };
