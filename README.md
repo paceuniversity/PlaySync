@@ -36,7 +36,7 @@ PlaySync brings together all your gaming profiles from platforms like PC, PlaySt
 
 * [Sprint planning]()
 * [Scrums]()
-* [Sprint demo video]()
+* [Sprint demo video](https://drive.google.com/file/d/1rFLvOQ1oZFBp2fjlgzR2vHsa5GE1B9ze/view?usp=sharing)
 * [Sprint retrospective]()
 
 ### Sprint 3
