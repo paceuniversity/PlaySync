@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
+import authRoutes from './routes/auth/register';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger';
 import './firebase/firebase';
 
 dotenv.config();
@@ -12,12 +14,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (_req, res) => {
-  res.send('Welcome to the PlaySync API!');
-});
-
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}/api/docs`);
 });
