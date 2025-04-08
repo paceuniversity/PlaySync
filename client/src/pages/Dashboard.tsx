@@ -1,6 +1,6 @@
 import React from 'react';
 import Header from '../components/Header';
-import Products from '../components/Products';
+import Products from '../components/Dashboard/Products';
 const Dashboard = () => {
   return (
     <div style={{ backgroundColor: '#223142', minHeight: '100vh' }}>
