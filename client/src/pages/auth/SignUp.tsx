@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import logo from '../../assets/PlaySyncLogo.png';
 import Lottie from 'lottie-react';
 import signupAnimation from '../../assets/animations/SignUpAnimation.json';
-// import toast from 'react-hot-toast';
-// import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAxios } from '../../hooks/useAxios';
+import { useNavigate } from 'react-router-dom';
 
 interface SignUpProps {
   email: string;
@@ -23,9 +24,9 @@ const SignUp: React.FC = () => {
     lastName: '',
     userName: '',
   });
-  //   const [isLoading, setIsLoading] = useState(false);
 
-  //   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -39,6 +40,49 @@ const SignUp: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const toggleConfirmPasswordVisibility = () =>
     setShowConfirmPassword((prev) => !prev);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (
+      !user.email ||
+      !user.password ||
+      !user.confirmPassword ||
+      !user.firstName ||
+      !user.lastName ||
+      !user.userName
+    ) {
+      toast.error('Please fill in all fields!');
+      return;
+    }
+
+    if (user.password !== user.confirmPassword) {
+      toast.error('Passwords do not match!');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await useAxios.post(`auth/signup`, {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.userName,
+        email: user.email,
+        password: user.password,
+      });
+
+      toast.success('Account created successfully!');
+
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
+    } catch (error: unknown) {
+      console.error(error);
+      toast.error('Failed to create account!');
+    }
+  };
+
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100">
@@ -56,8 +100,7 @@ const SignUp: React.FC = () => {
               <h2 className="text-white m-0">PlaySync</h2>
             </div>
             <p className="text-white m-0">Create Account</p>
-            <form className="mt-3">
-              {/* onSubmit={handleSubmit} */}
+            <form className="mt-3" onSubmit={handleSubmit}>
               <div className="mb-3 row">
                 <div className="col-md-6">
                   <label htmlFor="firstName" className="form-label">
@@ -185,9 +228,9 @@ const SignUp: React.FC = () => {
               <button
                 type="submit"
                 className="btn btn-primary w-100"
-                // disabled={isLoading}
+                disabled={isLoading}
               >
-                {/* {isLoading ? 'Creating Account...' : 'Sign Up'} */}
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
               </button>
             </form>
           </div>

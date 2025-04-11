@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import { FaUserAlt } from 'react-icons/fa';
-import { IoHome } from 'react-icons/io5';
-import { AiFillMessage } from 'react-icons/ai';
-import { FaSearch } from 'react-icons/fa';
-import { TbWorldUpload } from 'react-icons/tb';
-import logo from '../assets/PlaySyncLogo.png';
 
 const Products: React.FC = () => {
   const [gameCovers, setGameCovers] = useState<string[]>([]);
@@ -50,7 +43,7 @@ const Products: React.FC = () => {
         {
           headers: {
             'Client-ID': 'o6sundgzxb9yxfh18qcn106ziwoixz',
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'text/plain',
           },
         }
@@ -71,12 +64,11 @@ const Products: React.FC = () => {
       className="navbar navbar-expand-lg navbar-light shadow-sm px-4 w-full"
       style={{ backgroundColor: '#1b2838' }}
     >
-      
-
       {/* Scrollable list of random game covers */}
       {gameCovers.length > 0 && (
         <div className="mt-4 px-3 w-100">
-          <h5 className="text-white mb-3">Random Game Covers</h5> {/*ugly but good start as the dashboard will get complicated
+          <h5 className="text-white mb-3">Random Game Covers</h5>{' '}
+          {/*ugly but good start as the dashboard will get complicated
                                                                      also.. im probably doing too much for this component*/}
           <div
             style={{
