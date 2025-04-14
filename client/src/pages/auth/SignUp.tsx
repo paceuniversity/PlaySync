@@ -12,7 +12,7 @@ interface SignUpProps {
   confirmPassword: string;
   firstName: string;
   lastName: string;
-  userName: string;
+  username: string;
 }
 
 const SignUp: React.FC = () => {
@@ -22,11 +22,11 @@ const SignUp: React.FC = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    userName: '',
+    username: '',
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -50,7 +50,7 @@ const SignUp: React.FC = () => {
       !user.confirmPassword ||
       !user.firstName ||
       !user.lastName ||
-      !user.userName
+      !user.username
     ) {
       toast.error('Please fill in all fields!');
       return;
@@ -61,13 +61,11 @@ const SignUp: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       await useAxios.post(`auth/signup`, {
         firstName: user.firstName,
         lastName: user.lastName,
-        username: user.userName,
+        username: user.username,
         email: user.email,
         password: user.password,
       });
@@ -77,8 +75,11 @@ const SignUp: React.FC = () => {
       setTimeout(() => {
         navigate('/');
       }, 100);
+
+      setIsLoading(false);
     } catch (error: unknown) {
       console.error(error);
+      setIsLoading(false);
       toast.error('Failed to create account!');
     }
   };
@@ -158,7 +159,7 @@ const SignUp: React.FC = () => {
                   id="username"
                   name="username"
                   placeholder="Username"
-                  value={user.userName}
+                  value={user.username}
                   onChange={handleChange}
                   required
                 />

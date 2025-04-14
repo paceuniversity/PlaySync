@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  background-color: #1b2838;
 }
 
 .App-logo {
@@ -14,18 +15,17 @@
 }
 
 .App-header {
-  background-color: #171a21; /* Steam's dark background */
+  background-color: #1b2838;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
 }
 
 .App-link {
-  color: #66c0f4; /* Steam's highlight blue */
+  color: #66c0f4;
 }
 
 @keyframes App-logo-spin {

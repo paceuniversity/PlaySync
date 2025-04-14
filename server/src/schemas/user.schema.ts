@@ -9,13 +9,16 @@ export interface IUser {
   steamId?: string;
   xboxId?: string;
   riotId?: string;
-  twitchId?: string; 
-  youtubeId?: string; 
+  twitchId?: string;
+  youtubeId?: string;
   linkedAccounts?: string[];
+  numOfGames?: number;
+  numOfFriends: number;
+  numOfCommunities?: number;
   gameLibrary?: string[];
   friendsList?: string[];
   joinedCommunities?: string[];
   lastActive?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
-  onlineStatus?: 'online' | 'offline' | 'busy' | 'away';
+  onlineStatus?: 'online' | 'offline';
 }

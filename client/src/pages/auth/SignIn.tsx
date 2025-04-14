@@ -54,12 +54,12 @@ const SignIn: React.FC = () => {
       }
 
       setUserId(userId);
-      console.log(userId);
+      localStorage.setItem('userId', userId);
 
       toast.success('Successfully logged in!');
 
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/profile');
       }, 100);
     },
 

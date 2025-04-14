@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const ProfileFeed = () => {
   const [activeTab, setActiveTab] = useState<'library' | 'friends'>('library');

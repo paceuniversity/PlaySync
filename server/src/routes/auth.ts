@@ -39,7 +39,7 @@ const authRoutes = express.Router();
  *       201:
  *         description: User registered successfully
  *       400:
- *         description: Email already in use or missing fields
+ *         description: Email already in use or invalid input
  *       500:
  *         description: Registration failed
  */
@@ -85,6 +85,22 @@ authRoutes.post('/signup', async (req: Request, res: any) => {
       username: lowercaseUsername,
       email,
       password: hashedPassword,
+      bio: '',
+      profilePictureUrl: '',
+      steamId: '',
+      xboxId: '',
+      riotId: '',
+      twitchId: '',
+      youtubeId: '',
+      linkedAccounts: [],
+      gameLibrary: [],
+      friendsList: [],
+      numOfFriends: 0,
+      numOfCommunities: 0,
+      numOfGames: 0,
+      joinedCommunities: [],
+      onlineStatus: 'offline',
+      lastActive: admin.firestore.Timestamp.now(),
       createdAt: admin.firestore.Timestamp.now(),
     };
 
@@ -105,7 +121,7 @@ authRoutes.post('/signup', async (req: Request, res: any) => {
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Login to an existing user
+ *     summary: Log in with email or username
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -119,15 +135,20 @@ authRoutes.post('/signup', async (req: Request, res: any) => {
  *             properties:
  *               userReq:
  *                 type: string
+ *                 description: Email or username
  *               password:
  *                 type: string
  *     responses:
  *       200:
- *         description: User successfully logged in!
+ *         description: Login successful
  *       400:
- *         description: User does not exist!
+ *         description: Missing fields or invalid password format
+ *       401:
+ *         description: Incorrect password
+ *       404:
+ *         description: User not found
  *       500:
- *         description: Login failed!
+ *         description: Login failed
  */
 
 authRoutes.post('/login', async (req: Request, res: any) => {
@@ -174,6 +195,10 @@ authRoutes.post('/login', async (req: Request, res: any) => {
       return res.status(401).json({ error: 'Incorrect password!' });
     }
 
+    await db.collection('users').doc(userDoc.id).update({
+      onlineStatus: 'online',
+    });
+
     // For now no token
     return res.status(200).json({
       message: 'Successfully logged in!',
@@ -191,9 +216,57 @@ authRoutes.post('/login', async (req: Request, res: any) => {
 
 /**
  * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Logout user and update status to offline
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User logged out successfully
+ *       400:
+ *         description: Missing userId
+ *       500:
+ *         description: Logout failed
+ */
+
+authRoutes.post('/logout', async (req: Request, res: any) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const userRef = db.collection('users').doc(userId);
+
+    await userRef.update({
+      onlineStatus: 'offline',
+      lastActive: admin.firestore.Timestamp.now(),
+    });
+
+    return res.status(200).json({ message: 'User logged out successfully!' });
+  } catch (error) {
+    console.error('[LOGOUT ERROR]', error);
+    res.status(500).json({ error: 'Logout failed!' });
+  }
+});
+
+/**
+ * @swagger
  * /auth/{userId}:
  *   get:
- *     summary: Get user details by user ID
+ *     summary: Fetch user details by ID
  *     tags: [Auth]
  *     parameters:
  *       - in: path
@@ -201,7 +274,7 @@ authRoutes.post('/login', async (req: Request, res: any) => {
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user to fetch
+ *         description: The user's unique ID
  *     responses:
  *       200:
  *         description: Successfully fetched user details
@@ -225,6 +298,44 @@ authRoutes.post('/login', async (req: Request, res: any) => {
  *                       type: string
  *                     email:
  *                       type: string
+ *                     onlineStatus:
+ *                       type: string
+ *                     bio:
+ *                       type: string
+ *                     profilePictureUrl:
+ *                       type: string
+ *                     steamId:
+ *                       type: string
+ *                     xboxId:
+ *                       type: string
+ *                     riotId:
+ *                       type: string
+ *                     twitchId:
+ *                       type: string
+ *                     youtubeId:
+ *                       type: string
+ *                     linkedAccounts:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     gameLibrary:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     numOfGames:
+ *                       type: integer
+ *                     friendsList:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     numOfFriends:
+ *                       type: integer
+ *                     joinedCommunities:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     numOfCommunities:
+ *                       type: integer
  *       400:
  *         description: Missing required fields
  *       404:
@@ -254,14 +365,101 @@ authRoutes.get('/:userId', async (req: Request, res: any) => {
       message: 'Successfully fetch user details!',
       data: {
         userId: userDoc.id,
+        onlineStatus: userData?.onlineStatus,
+        email: userData?.email,
         username: userData?.username,
         firstName: userData?.firstName,
         lastName: userData?.lastName,
-        email: userData?.email,
+        bio: userData?.bio,
+        profilePic: userData?.profilePic,
+        friendsList: userData?.friendsList,
+        numOfFriends: userData?.numOfFriends,
+        joinedCommunities: userData?.joinedCommunities,
+        numOfCommunities: userData?.numOfCommunities,
+        linkedAccounts: userData?.linkedAccounts,
+        steamId: userData?.steamId,
+        xboxId: userData?.xboxId,
+        riotId: userData?.riotId,
+        twitchId: userData?.twitchId,
+        youtubeId: userData?.youtubeId,
+        gameLibrary: userData?.gameLibrary,
+        numOfGames: userData?.numOfGames,
       },
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user info!' });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/{userId}:
+ *   patch:
+ *     summary: Update basic user profile information
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User's ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - username
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User info updated successfully
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to update user info
+ */
+
+authRoutes.patch('/:userId', async (req: Request, res: any) => {
+  try {
+    const { userId } = req.params;
+    const { firstName, lastName, username, bio } = req.body;
+
+    if (!username || !firstName || !lastName || !userId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    await userRef.update({
+      firstName,
+      lastName,
+      bio,
+      username: username.toLowerCase(),
+    });
+
+    return res.status(200).json({ message: 'User info updated successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user info!' });
   }
 });
 
