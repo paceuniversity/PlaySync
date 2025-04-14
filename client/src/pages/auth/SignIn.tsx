@@ -2,12 +2,22 @@ import React, { useState } from 'react';
 import Lottie from 'lottie-react';
 import loginAnimation from '../../assets/animations/LoginAnimation.json';
 import logo from '../../assets/PlaySyncLogo.png';
-// import toast from 'react-hot-toast';
-// import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAxios } from '../../hooks/useAxios';
+import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 
 interface IAuthRequest {
   email: string;
   password: string;
+}
+
+interface IAuthResponse {
+  message: string;
+  data: {
+    userId: string;
+  };
+  // accessToken: string;
 }
 
 const SignIn: React.FC = () => {
@@ -15,16 +25,61 @@ const SignIn: React.FC = () => {
     email: '',
     password: '',
   });
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
-  //   const navigate = useNavigate();
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+  const [, setUserId] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
+  const { mutate, isPending: isLoading } = useMutation<
+    IAuthResponse,
+    IAuthResponse,
+    unknown
+  >({
+    mutationFn: (userData) =>
+      useAxios.post(`auth/login`, userData).then((res) => res.data),
+    onSuccess: async (responseData: { data: { userId: string } }) => {
+      const { userId } = responseData.data;
+
+      if (!userId) {
+        toast.error('Authentication failed!');
+        return;
+      }
+
+      setUserId(userId);
+      localStorage.setItem('userId', userId);
+
+      toast.success('Successfully logged in!');
+
+      setTimeout(() => {
+        navigate('/profile');
+      }, 100);
+    },
+
+    onError: (error: unknown) => {
+      toast.error('Failed to login!');
+      console.error(error);
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!user.email || !user.password) {
+      toast.error('Please fill in all fields!');
+      return;
+    }
+
+    mutate({ userReq: user.email, password: user.password });
   };
+
   return (
     <div className="container-fluid vh-100">
       <div className="row h-100">
@@ -44,8 +99,7 @@ const SignIn: React.FC = () => {
             </div>
 
             <p className=" mb-4">Sign In</p>
-            <form>
-              {/* onSubmit={handleSubmit} */}
+            <form onSubmit={handleSubmit}>
               <div className="mb-3 position-relative">
                 <label htmlFor="email" className="form-label text-white">
                   Email
@@ -105,21 +159,13 @@ const SignIn: React.FC = () => {
                     </a>
                   </span>
                 </div>
-                <span className="form-text">
-                  <a
-                    href="/dashboard"
-                    className="text-decoration-none text-primary"
-                  >
-                    Dashboard
-                  </a>
-                </span>
               </div>
               <button
                 type="submit"
                 className="btn btn-primary w-100"
-                // disabled={isLoading}
+                disabled={isLoading}
               >
-                {/* {isLoading ? 'Signing In...' : 'Sign In'} */}
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </button>
             </form>
           </div>
