@@ -8,13 +8,17 @@ export interface IUser {
   profilePictureUrl?: string;
   steamId?: string;
   xboxId?: string;
-  psnId?: string;
-  nintendoId?: string;
-  gameLibrary?: string[];
+  riotId?: string;
+  twitchId?: string;
+  youtubeId?: string;
   linkedAccounts?: string[];
+  numOfGames?: number;
+  numOfFriends: number;
+  numOfCommunities?: number;
+  gameLibrary?: string[];
   friendsList?: string[];
-  onlineStatus?: 'online' | 'offline' | 'busy' | 'away';
   joinedCommunities?: string[];
   lastActive?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
+  onlineStatus?: 'online' | 'offline';
 }

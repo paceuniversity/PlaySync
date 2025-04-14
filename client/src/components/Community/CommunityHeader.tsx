@@ -1,7 +1,7 @@
-import React from 'react';
+import profilePicture from '../../assets/Profile-PNG.png';
 
 const CommunityHeader = () => {
-  const communityImage = '../../../gamepad-icon.png';
+  const communityImage = profilePicture;
 
   return (
     <div
