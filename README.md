@@ -7,7 +7,7 @@ Sajal, Ilir, Archie, Aidan
 
 
 ## App description
-PlaySync brings together all your gaming profiles from platforms like PC, PlayStation, and Xbox into one place. It helps you track achievements, playtime, write and read game reviews, and connect with friends across platforms. You can join communities, see trending games, and get game recommendations based on your activity. It also lets shoppers track game prices and find the best deals.
+PlaySync brings together all your gaming profiles from platforms like Steam, Xbox, and Riot into one place. It helps you track achievements, playtime, write and read game reviews, and connect with friends across platforms. You can join communities, see trending games, and get game recommendations based on your activity. It also lets shoppers track game prices and find the best deals.
 
 ## Idea Proposal
 [Idea Proposal](https://docs.google.com/document/d/1AlGSqkowSEPLI3mufgHNpucX_3aaIc8wTOB2XPbzsXI/edit?usp=sharing)
