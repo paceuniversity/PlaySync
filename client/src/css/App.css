@@ -24,10 +24,6 @@
   font-size: calc(10px + 2vmin);
 }
 
-.App-link {
-  color: #66c0f4;
-}
-
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
