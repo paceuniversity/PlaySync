@@ -5,6 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
 import './firebase/firebase';
 import authRoutes from './routes/auth';
+import socialRoutes from './routes/social';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
+app.use('/api/social', socialRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}/api/docs`);
