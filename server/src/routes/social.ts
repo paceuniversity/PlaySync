@@ -212,6 +212,104 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
 
 /**
  * @swagger
+ * /social/{userId}:
+ *   get:
+ *     summary: Get all friend requests for a specific user
+ *     tags: [Social]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user to retrieve friend requests for
+ *     responses:
+ *       200:
+ *         description: Successfully fetched friend requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       reqId:
+ *                         type: string
+ *                       requestorId:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [pending, accept, rejected]
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to fetch user's friend requests
+ */
+
+socialRoutes.get('/:userId', async (req: Request, res: any) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing required fields!' });
+    }
+
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    const userData = userDoc.data();
+    const friendRequests = userData?.friendRequests || [];
+
+    if (friendRequests.length === 0) {
+      return res.status(200).json({ message: 'No friend requests found!' });
+    }
+
+    const requestData = await Promise.all(
+      friendRequests.map(async (reqId: string) => {
+        const reqRef = db.collection('friendReq').doc(reqId);
+        const reqDoc = await reqRef.get();
+
+        if (!reqDoc.exists) {
+          return null;
+        }
+
+        const reqData = reqDoc.data();
+        return {
+          reqId: reqDoc.id,
+          requestorId: reqData?.requestorId,
+          status: reqData?.status,
+          createdAt: reqData?.createdAt,
+        };
+      })
+    );
+
+    const filteredRequests = requestData.filter(Boolean);
+
+    return res.status(200).json({
+      message: "Successfully fetched user's friend requests!",
+      data: filteredRequests,
+    });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to user's friend request!` });
+  }
+});
+
+/**
+ * @swagger
  * /social/{reqId}:
  *   patch:
  *     summary: Respond to a friend request (accept or decline)
@@ -327,7 +425,183 @@ socialRoutes.patch('/:reqId', async (req: Request, res: any) => {
   }
 });
 
+/**
+ * @swagger
+ * /social/{reqId}:
+ *   delete:
+ *     summary: Cancel a friend request
+ *     tags: [Social]
+ *     parameters:
+ *       - in: path
+ *         name: reqId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the friend request to cancel
+ *     responses:
+ *       200:
+ *         description: Friend request canceled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Friend request or recipient user not found
+ *       500:
+ *         description: Failed to cancel friend request
+ */
 
+socialRoutes.delete('/:reqId', async (req: Request, res: any) => {
+  try {
+    const { reqId } = req.params;
 
+    if (!reqId) {
+      return res.status(400).json({ error: 'Missing required fields!' });
+    }
+
+    const reqRef = db.collection('friendReq').doc(reqId);
+    const reqDoc = await reqRef.get();
+
+    if (!reqDoc.exists) {
+      return res.status(404).json({ error: 'Request not found!' });
+    }
+
+    const reqData = reqDoc.data();
+
+    const recipientId = reqData?.recipientId;
+    const recipientRef = db.collection('users').doc(recipientId);
+    const recipientDoc = await recipientRef.get();
+
+    if (!recipientDoc.exists) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    const recipientData = recipientDoc.data();
+
+    try {
+      await recipientRef.update({
+        friendRequests: (recipientData?.friendRequests || []).filter(
+          (id: string) => id !== reqId
+        ),
+      });
+    } catch (error) {
+      return res
+        .status(200)
+        .json({ message: 'Failed to cancel friend request!' });
+    }
+
+    await reqRef.delete();
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to cancel friend request!' });
+  }
+});
+
+/**
+ * @swagger
+ * /social/{userId}:
+ *   delete:
+ *     summary: Remove a user from the current user's friend list
+ *     tags: [Social]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the current user removing a friend
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - friendUsername
+ *             properties:
+ *               friendUsername:
+ *                 type: string
+ *                 description: The username of the friend to remove
+ *     responses:
+ *       200:
+ *         description: Friend removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Missing fields or users not friends
+ *       404:
+ *         description: User or friend not found
+ *       500:
+ *         description: Failed to remove friend
+ */
+
+socialRoutes.delete('/:userId', async (req: Request, res: any) => {
+  try {
+    const { userId } = req.params;
+    const { friendUsername } = req.body;
+
+    if (!userId || !friendUsername) {
+      return res.status(400).json({ error: 'Missing required fields!' });
+    }
+
+    const userSnapshot = await db
+      .collection('users')
+      .where('username', '==', friendUsername.toLowerCase())
+      .get();
+
+    if (userSnapshot.empty) {
+      return res.status(404).json({ error: 'Friend not found!' });
+    }
+
+    const friendDoc = userSnapshot.docs[0];
+    const friendData = friendDoc.data();
+    const friendId = friendDoc.id;
+
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    const userData = userDoc.data();
+
+    const userFriendsList = userData?.friendsList || [];
+    const friendFriendsList = friendData?.friendsList || [];
+
+    if (!userFriendsList.includes(friendId)) {
+      return res.status(400).json({ error: 'User is not a friend!' });
+    }
+    if (!friendFriendsList.includes(userId)) {
+      return res
+        .status(400)
+        .json({ error: 'Friend is not in your friends list!' });
+    }
+
+    // Remove friend from both users' friends lists
+    await userRef.update({
+      friendsList: admin.firestore.FieldValue.arrayRemove(friendId),
+      numOfFriends: userData?.numOfFriends - 1,
+    });
+    await db
+      .collection('users')
+      .doc(friendId)
+      .update({
+        friendsList: admin.firestore.FieldValue.arrayRemove(userId),
+        numOfFriends: friendData?.numOfFriends - 1,
+      });
+    return res.status(200).json({ message: 'Friend removed successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove friend!' });
+  }
+});
 
 export default socialRoutes;
