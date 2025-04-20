@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { UserProvider } from './context/UserProfileContext';
+import { FriendProvider } from './context/PublicProfileContext';
 import Dashboard from './pages/Dashboard';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
@@ -51,9 +52,9 @@ function App() {
         <Route
           path="/user-profile"
           element={
-            <UserProvider>
+            <FriendProvider>
               <UserProfile />
-            </UserProvider>
+            </FriendProvider>
           }
         />
         <Route path="/dashboard" element={<Dashboard />} />
