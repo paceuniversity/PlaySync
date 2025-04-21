@@ -1,75 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
+
+type Game     = { name: string; coverUrl: string | null };
+type Category = { label: string; games: Game[] };
 
 const Products: React.FC = () => {
-  const [gameCovers, setGameCovers] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAccessToken = async () => {
+    (async () => {
       try {
-        const response = await axios.post(
-          'https://id.twitch.tv/oauth2/token',
-          null,
-          {
-            params: {
-              client_id: 'o6sundgzxb9yxfh18qcn106ziwoixz',
-              client_secret: '64t5k0k87q36fmjrb03ibguwb6npql',
-              grant_type: 'client_credentials',
-            },
-          }
-        );
-        const accessToken = response.data.access_token;
-        fetchRandomGameImages(accessToken);
-      } catch (error) {
-        console.error('Error fetching access token:', error);
+        const res = await fetch('http://localhost:3000/api/popular-games');
+        if (!res.ok) throw new Error(`Server responded ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data.categories)) {
+          console.error('Unexpected payload:', data);
+          throw new Error('Invalid API response');
+        }
+        setCategories(data.categories);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message);
       }
-    };
-
-    fetchAccessToken();
+    })();
   }, []);
 
-  const fetchRandomGameImages = async (accessToken: string) => {
-    try {
-      const response = await axios.post(
-        'https://cors-anywhere.herokuapp.com/https://api.igdb.com/v4/covers', //very bad not good cors policy workaround MOVE SERVER SIDE
-        `
-        fields url;
-        sort id desc;
-        limit 10;
-        offset ${Math.floor(Math.random() * 1000)};
-        `,
-        {
-          headers: {
-            'Client-ID': 'o6sundgzxb9yxfh18qcn106ziwoixz',
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'text/plain',
-          },
-        }
-      );
+  if (error) {
+    return <div className="text-red-500">Error: {error}</div>;
+  }
 
-      const coverUrls: string[] = response.data
-        .map((game: { url: string }) => game?.url && `https:${game.url}`)
-        .filter(Boolean);
-
-      setGameCovers(coverUrls);
-    } catch (error) {
-      console.error('Error fetching random game images:', error);
-    }
-  };
+  if (categories.length === 0) {
+    return <div className="text-white">Loading…</div>;
+  }
 
   return (
-    <nav
-      className="navbar navbar-expand-lg navbar-light shadow-sm px-4 w-full"
-      style={{ backgroundColor: '#1b2838' }}
-    >
-      {/* Scrollable list of random game covers */}
-      {gameCovers.length > 0 && (
-        <div className="mt-4 px-3 w-100">
-          <h5 className="text-white mb-3">Random Game Covers</h5>{' '}
-          {/*ugly but good start as the dashboard will get complicated
-                                                                     also.. im probably doing too much for this component*/}
+    <div className="container mt-4">
+      {categories.map(({ label, games }) => (
+        <div key={label} className="mb-6">
+          <h5 className="text-white mb-3">{label}</h5>
           <div
             style={{
               display: 'flex',
@@ -78,9 +46,9 @@ const Products: React.FC = () => {
               paddingBottom: '1rem',
             }}
           >
-            {gameCovers.map((url, index) => (
+            {games.map((game, idx) => (
               <div
-                key={index}
+                key={idx}
                 style={{
                   minWidth: '200px',
                   flexShrink: 0,
@@ -88,19 +56,27 @@ const Products: React.FC = () => {
                   padding: '10px',
                   borderRadius: '10px',
                   textAlign: 'center',
+                  color: 'white',
                 }}
               >
-                <img
-                  src={url}
-                  alt={`Game Cover ${index}`}
-                  style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
-                />
+                {game.coverUrl ? (
+                  <img
+                    src={game.coverUrl}
+                    alt={game.name}
+                    style={{ width: '100%', borderRadius: '8px' }}
+                  />
+                ) : (
+                  <div className="text-gray-500">No Image</div>
+                )}
+                <div style={{ marginTop: '8px', fontWeight: 'bold' }}>
+                  {game.name}
+                </div>
               </div>
             ))}
           </div>
         </div>
-      )}
-    </nav>
+      ))}
+    </div>
   );
 };
 
