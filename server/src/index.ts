@@ -43,7 +43,8 @@ async function fetchAccessToken(): Promise<string> {
   const data = await res.json();
   accessToken = data.access_token;
   tokenExpiresAt = now + data.expires_in * 1000 - 60 * 1000; 
-  return accessToken;
+  return accessToken!;
+
 }
 
 const POPULARITY_MAP: Record<number, string> = {
