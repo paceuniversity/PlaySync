@@ -4,7 +4,7 @@ import profilePicture from '../../assets/Profile-PNG.png';
 import { FaCircle } from 'react-icons/fa6';
 import { FaCircleMinus } from 'react-icons/fa6';
 import { useFriend } from '../../context/PublicProfileContext';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface FriendsProps {
   userId: string;
@@ -17,6 +17,7 @@ interface FriendsProps {
 const ProfileFeed = () => {
   const userId = localStorage.getItem('userId');
   const friendContext = useFriend();
+  const navigate = useNavigate();
 
   const profileImage = profilePicture;
   const [activeTab, setActiveTab] = useState<'library' | 'friends'>('library');
@@ -33,20 +34,10 @@ const ProfileFeed = () => {
 
         setFriends(fetchInfo);
 
-        if (friendContext?.setUsername) {
+        if (friendContext) {
           if (fetchInfo.length > 0) {
             friendContext.setUsername(fetchInfo[0].username);
-          }
-        }
-
-        if (friendContext?.setUserBio) {
-          if (fetchInfo.length > 0) {
             friendContext.setUserBio(fetchInfo[0].bio);
-          }
-        }
-
-        if (friendContext?.setUserStatus) {
-          if (fetchInfo.length > 0) {
             friendContext.setUserStatus(fetchInfo[0].onlineStatus);
           }
         }
@@ -60,7 +51,7 @@ const ProfileFeed = () => {
     if (userId) {
       fetchFriends();
     }
-  });
+  }, [userId]);
 
   return (
     <div
@@ -181,20 +172,24 @@ const ProfileFeed = () => {
                           gap: '8px',
                         }}
                       >
-                        <Link
-                          to="/user-profile"
-                          className="hover-link"
-                          onClick={() => {
-                            if (friendContext) {
-                              friendContext.setUserId(friend.userId);
-                              friendContext.setUsername(friend.username);
-                              friendContext.setUserBio(friend.bio);
-                              friendContext.setUserStatus(friend.onlineStatus);
-                            }
+                        <span
+                          onClick={() =>
+                            navigate('/user-profile', {
+                              state: {
+                                userId: friend.userId,
+                                username: friend.username,
+                                userBio: friend.bio,
+                                userStatus: friend.onlineStatus,
+                              },
+                            })
+                          }
+                          style={{
+                            color: 'white',
+                            cursor: 'pointer',
                           }}
                         >
                           {friend.username}
-                        </Link>
+                        </span>
 
                         {friend.onlineStatus === 'online' ? (
                           <FaCircle

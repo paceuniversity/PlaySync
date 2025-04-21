@@ -39,7 +39,7 @@ const ClientProfile = () => {
       fetchUsername();
       userContext?.setUserId(userId);
     }
-  });
+  }, [userId, userContext]);
 
   return (
     <div style={{ backgroundColor: '#223142', minHeight: '100vh' }}>

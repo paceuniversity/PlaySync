@@ -1,5 +1,5 @@
 import './css/App.css';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { UserProvider } from './context/UserProfileContext';
@@ -15,17 +15,12 @@ import ClientProfile from './pages/ClientProfile';
 import UserProfile from './pages/UserProfile';
 
 function App() {
-  const [, setLoading] = useState<boolean>(true);
   const queryClient = new QueryClient();
   const { pathname } = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

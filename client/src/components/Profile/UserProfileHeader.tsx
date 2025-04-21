@@ -11,7 +11,7 @@ const ProfileHeader = () => {
 
   const username = friend?.username || ' ';
   const bio = friend?.userBio || ' ';
-  const status = friend?.userStatus || 'offline';
+  const userStatus = friend?.userStatus || 'offline';
 
   return (
     <div
@@ -57,8 +57,7 @@ const ProfileHeader = () => {
             }}
           >
             <span>{username}</span>
-            <FaCircle style={{ color: 'limegreen', fontSize: '0.6rem' }} />
-            {status === 'online' ? (
+            {userStatus === 'online' ? (
               <FaCircle style={{ color: 'limegreen', fontSize: '0.6rem' }} />
             ) : (
               <FaCircleMinus style={{ color: 'red', fontSize: '0.65rem' }} />
@@ -72,7 +71,7 @@ const ProfileHeader = () => {
             text-decoration: none;
           }
           .hover-link:hover {
-            color: #007bff; /* blue on hover */
+            color: #007bff; 
           }
         `}
           </style>
