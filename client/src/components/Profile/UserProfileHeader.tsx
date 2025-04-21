@@ -1,10 +1,17 @@
 import { Link } from 'react-router-dom';
 import profilePicture from '../../assets/Profile-PNG.png';
 import { FaCircle } from 'react-icons/fa6';
-// import { FaCircleMinus } from 'react-icons/fa6';
+import { useFriend } from '../../context/PublicProfileContext';
+import { FaCircleMinus } from 'react-icons/fa6';
 
 const ProfileHeader = () => {
   const profileImage = profilePicture;
+
+  const friend = useFriend();
+
+  const username = friend?.username || ' ';
+  const bio = friend?.userBio || ' ';
+  const userStatus = friend?.userStatus || 'offline';
 
   return (
     <div
@@ -49,13 +56,12 @@ const ProfileHeader = () => {
               gap: '8px',
             }}
           >
-            Username
-            <FaCircle style={{ color: 'limegreen', fontSize: '0.6rem' }} />
-            {/* {userStatus === 'online' ? (
+            <span>{username}</span>
+            {userStatus === 'online' ? (
               <FaCircle style={{ color: 'limegreen', fontSize: '0.6rem' }} />
             ) : (
               <FaCircleMinus style={{ color: 'red', fontSize: '0.65rem' }} />
-            )} */}
+            )}
           </h2>
 
           <style>
@@ -65,7 +71,7 @@ const ProfileHeader = () => {
             text-decoration: none;
           }
           .hover-link:hover {
-            color: #007bff; /* blue on hover */
+            color: #007bff; 
           }
         `}
           </style>
@@ -96,7 +102,7 @@ const ProfileHeader = () => {
             whiteSpace: 'nowrap',
           }}
         >
-          Bio
+          <p>{bio}</p>
         </p>
       </div>
     </div>
