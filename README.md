@@ -32,7 +32,7 @@ PlaySync brings together all your gaming profiles from platforms like Steam, Xbo
 
 ### Sprint 1
 
-- [Sprint planning]()
+- [Sprint planning](https://docs.google.com/spreadsheets/d/1Aw4W0HMNIpXbWyq4GSXJr7qBaFX81wDK-E0oNWFUV0E/edit?gid=650807239#gid=650807239)
 - [Scrums](https://docs.google.com/document/d/1HqWtFfGy1n5z4VYdbs26lYoBJ1Rjdv6qIqhW1oBsVL8/edit?usp=sharing)
 - [Sprint demo video]()
 - [Sprint retrospective](https://docs.google.com/document/d/13CCg9zhJyw_VSlilse1pAofr2ss8AGKDmStRgDM3H7I/edit?usp=sharing)
