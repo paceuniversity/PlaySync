@@ -17,6 +17,7 @@ export interface IUser {
   numOfCommunities?: number;
   gameLibrary?: string[];
   friendsList?: string[];
+  friendRequests?: string[];
   joinedCommunities?: string[];
   lastActive?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;

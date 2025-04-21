@@ -1,7 +1,7 @@
 import express, { Request } from 'express';
-import bcrypt from 'bcrypt';
 import { db } from '../firebase/firebase';
 import admin from 'firebase-admin';
+import bcrypt from 'bcrypt';
 import { IUser } from '../schemas/user.schema';
 
 const authRoutes = express.Router();
@@ -64,7 +64,16 @@ authRoutes.post('/signup', async (req: Request, res: any) => {
       .get();
 
     if (!userSnapshot.empty) {
-      return res.status(400).json({ error: 'Email already in use' });
+      return res.status(400).json({ error: 'Email already in use!' });
+    }
+
+    const usernameSnapshot = await db
+      .collection('users')
+      .where('username', '==', username)
+      .get();
+
+    if (!usernameSnapshot.empty) {
+      return res.status(400).json({ error: 'Username is taken!' });
     }
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{7,}$/;
@@ -94,6 +103,7 @@ authRoutes.post('/signup', async (req: Request, res: any) => {
       youtubeId: '',
       linkedAccounts: [],
       gameLibrary: [],
+      friendRequests: [],
       friendsList: [],
       numOfFriends: 0,
       numOfCommunities: 0,
@@ -330,6 +340,10 @@ authRoutes.post('/logout', async (req: Request, res: any) => {
  *                         type: string
  *                     numOfFriends:
  *                       type: integer
+ *                     friendRequests:
+ *                       type: array
+ *                       items:
+ *                         type: string
  *                     joinedCommunities:
  *                       type: array
  *                       items:
@@ -374,6 +388,144 @@ authRoutes.get('/:userId', async (req: Request, res: any) => {
         profilePic: userData?.profilePic,
         friendsList: userData?.friendsList,
         numOfFriends: userData?.numOfFriends,
+        friendRequests: userData?.friendRequests,
+        joinedCommunities: userData?.joinedCommunities,
+        numOfCommunities: userData?.numOfCommunities,
+        linkedAccounts: userData?.linkedAccounts,
+        steamId: userData?.steamId,
+        xboxId: userData?.xboxId,
+        riotId: userData?.riotId,
+        twitchId: userData?.twitchId,
+        youtubeId: userData?.youtubeId,
+        gameLibrary: userData?.gameLibrary,
+        numOfGames: userData?.numOfGames,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user info!' });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/username/{username}:
+ *   get:
+ *     summary: Fetch user details by username
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user's username
+ *     responses:
+ *       200:
+ *         description: Successfully fetched user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     onlineStatus:
+ *                       type: string
+ *                     bio:
+ *                       type: string
+ *                     profilePictureUrl:
+ *                       type: string
+ *                     steamId:
+ *                       type: string
+ *                     xboxId:
+ *                       type: string
+ *                     riotId:
+ *                       type: string
+ *                     twitchId:
+ *                       type: string
+ *                     youtubeId:
+ *                       type: string
+ *                     linkedAccounts:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     gameLibrary:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     numOfGames:
+ *                       type: integer
+ *                     friendsList:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     numOfFriends:
+ *                       type: integer
+ *                     friendRequests:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     joinedCommunities:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     numOfCommunities:
+ *                       type: integer
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to fetch user info
+ */
+
+authRoutes.get('/username/:username', async (req: Request, res: any) => {
+  try {
+    const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({ error: 'Missing required fields!' });
+    }
+
+    const userSnapshot = await db
+      .collection('users')
+      .where('username', '==', username.toLowerCase())
+      .get();
+
+    if (userSnapshot.empty) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    const userDoc = userSnapshot.docs[0];
+    const userData = userDoc.data();
+
+    return res.status(200).json({
+      message: 'Successfully fetch user details!',
+      data: {
+        userId: userDoc.id,
+        onlineStatus: userData?.onlineStatus,
+        email: userData?.email,
+        username: userData?.username,
+        firstName: userData?.firstName,
+        lastName: userData?.lastName,
+        bio: userData?.bio,
+        profilePic: userData?.profilePic,
+        friendsList: userData?.friendsList,
+        numOfFriends: userData?.numOfFriends,
+        friendRequests: userData?.friendRequests,
         joinedCommunities: userData?.joinedCommunities,
         numOfCommunities: userData?.numOfCommunities,
         linkedAccounts: userData?.linkedAccounts,
@@ -460,6 +612,63 @@ authRoutes.patch('/:userId', async (req: Request, res: any) => {
     return res.status(200).json({ message: 'User info updated successfully!' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update user info!' });
+  }
+});
+
+/**
+ * @swagger
+ * /auth/{userId}:
+ *   delete:
+ *     summary: Delete a user by their ID
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The unique ID of the user to delete
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User deleted successfully!
+ *       400:
+ *         description: Missing userId parameter in request
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to delete user
+ */
+
+authRoutes.delete('/:userId', async (req: Request, res: any) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res
+        .status(500)
+        .json({ error: 'Failed to retrieve user details, please try again!' });
+    }
+
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    await userRef.delete();
+
+    return res.status(200).json({ message: 'User deleted successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete user!' });
   }
 });
 
