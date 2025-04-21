@@ -43,8 +43,8 @@ async function fetchAccessToken(): Promise<string> {
   );
   const data = await res.json();
   accessToken = data.access_token;
-  tokenExpiresAt = now + data.expires_in * 1000 - 60 * 1000; 
-  return accessToken;
+  tokenExpiresAt = now + data.expires_in * 1000 - 60 * 1000;
+  return accessToken!;
 }
 
 const POPULARITY_MAP: Record<number, string> = {
@@ -58,35 +58,45 @@ const POPULARITY_MAP: Record<number, string> = {
   8: 'Steam Total Reviews',
 };
 
-const popularGamesHandler: RequestHandler = async (req, res) => { //handler required i can barely keep track of why
+const popularGamesHandler: RequestHandler = async (req, res) => {
+  //handler required i can barely keep track of why
   try {
     const token = await fetchAccessToken();
 
     const categories = await Promise.all(
       Object.entries(POPULARITY_MAP).map(async ([type, label]) => {
-        const popRes = await fetch('https://api.igdb.com/v4/popularity_primitives', {
-          method: 'POST',
-          headers: {
-            'Client-ID': process.env.CLIENT_ID!,
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: `
+        const popRes = await fetch(
+          'https://api.igdb.com/v4/popularity_primitives',
+          {
+            method: 'POST',
+            headers: {
+              'Client-ID': process.env.CLIENT_ID!,
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'text/plain',
+            },
+            body: `
             fields game_id;
             sort value desc;
             limit 10;
             where popularity_type = ${type};
           `,
-        });
+          }
+        );
 
         if (!popRes.ok) {
-          console.error(`popularity_primitives error for type ${type}:`, popRes.statusText);
+          console.error(
+            `popularity_primitives error for type ${type}:`,
+            popRes.statusText
+          );
           return { label, games: [] };
         }
 
         const popData = await popRes.json();
         if (!Array.isArray(popData)) {
-          console.error(`Expected array from popularity_primitives (type ${type}), got:`, popData);
+          console.error(
+            `Expected array from popularity_primitives (type ${type}), got:`,
+            popData
+          );
           return { label, games: [] };
         }
 
@@ -109,13 +119,19 @@ const popularGamesHandler: RequestHandler = async (req, res) => { //handler requ
         });
 
         if (!gamesRes.ok) {
-          console.error(`games API error for type ${type}:`, gamesRes.statusText);
+          console.error(
+            `games API error for type ${type}:`,
+            gamesRes.statusText
+          );
           return { label, games: [] };
         }
 
         const gamesData = await gamesRes.json();
         if (!Array.isArray(gamesData)) {
-          console.error(`Expected array from games API (type ${type}), got:`, gamesData);
+          console.error(
+            `Expected array from games API (type ${type}), got:`,
+            gamesData
+          );
           return { label, games: [] };
         }
 
