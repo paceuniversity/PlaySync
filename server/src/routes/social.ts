@@ -1,6 +1,6 @@
 import express, { Request } from 'express';
-import { db } from '../firebase/firebase';
 import admin from 'firebase-admin';
+import { db } from '../firebase/firebase';
 import { IFriendRequest } from '../schemas/friend-request.schema';
 
 const socialRoutes = express.Router();
@@ -437,7 +437,7 @@ socialRoutes.patch('/:reqId', async (req: Request, res: any) => {
     const reqDoc = await reqRef.get();
 
     if (!reqDoc.exists) {
-      return res.status(404).json({ error: 'Request not found!' });
+      return res.status(404).json({ error: 'User has no requests!' });
     }
 
     const reqData = reqDoc.data();
@@ -616,64 +616,67 @@ socialRoutes.delete('/:reqId', async (req: Request, res: any) => {
  *         description: Failed to remove friend
  */
 
-socialRoutes.delete('/:userId', async (req: Request, res: any) => {
-  try {
-    const { userId } = req.params;
-    const { friendUsername } = req.body;
+socialRoutes.delete(
+  '/remove-friend/:userId',
+  async (req: Request, res: any) => {
+    try {
+      const { userId } = req.params;
+      const { friendUsername } = req.body;
 
-    if (!userId || !friendUsername) {
-      return res.status(400).json({ error: 'Missing required fields!' });
-    }
+      if (!userId || !friendUsername) {
+        return res.status(400).json({ error: 'Missing required fields!' });
+      }
 
-    const userSnapshot = await db
-      .collection('users')
-      .where('username', '==', friendUsername.toLowerCase())
-      .get();
+      const userSnapshot = await db
+        .collection('users')
+        .where('username', '==', friendUsername.toLowerCase())
+        .get();
 
-    if (userSnapshot.empty) {
-      return res.status(404).json({ error: 'Friend not found!' });
-    }
+      if (userSnapshot.empty) {
+        return res.status(404).json({ error: 'Friend not found!' });
+      }
 
-    const friendDoc = userSnapshot.docs[0];
-    const friendData = friendDoc.data();
-    const friendId = friendDoc.id;
+      const friendDoc = userSnapshot.docs[0];
+      const friendData = friendDoc.data();
+      const friendId = friendDoc.id;
 
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found!' });
-    }
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+      if (!userDoc.exists) {
+        return res.status(404).json({ error: 'User not found!' });
+      }
 
-    const userData = userDoc.data();
+      const userData = userDoc.data();
 
-    const userFriendsList = userData?.friendsList || [];
-    const friendFriendsList = friendData?.friendsList || [];
+      const userFriendsList = userData?.friendsList || [];
+      const friendFriendsList = friendData?.friendsList || [];
 
-    if (!userFriendsList.includes(friendId)) {
-      return res.status(400).json({ error: 'User is not a friend!' });
-    }
-    if (!friendFriendsList.includes(userId)) {
-      return res
-        .status(400)
-        .json({ error: 'Friend is not in your friends list!' });
-    }
+      if (!userFriendsList.includes(friendId)) {
+        return res.status(400).json({ error: 'User is not a friend!' });
+      }
+      if (!friendFriendsList.includes(userId)) {
+        return res
+          .status(400)
+          .json({ error: 'Friend is not in your friends list!' });
+      }
 
-    // Remove friend from both users' friends lists
-    await userRef.update({
-      friendsList: admin.firestore.FieldValue.arrayRemove(friendId),
-      numOfFriends: userData?.numOfFriends - 1,
-    });
-    await db
-      .collection('users')
-      .doc(friendId)
-      .update({
-        friendsList: admin.firestore.FieldValue.arrayRemove(userId),
-        numOfFriends: friendData?.numOfFriends - 1,
+      // Remove friend from both users' friends lists
+      await userRef.update({
+        friendsList: admin.firestore.FieldValue.arrayRemove(friendId),
+        numOfFriends: userData?.numOfFriends - 1,
       });
-    return res.status(200).json({ message: 'Friend removed successfully!' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to remove friend!' });
+      await db
+        .collection('users')
+        .doc(friendId)
+        .update({
+          friendsList: admin.firestore.FieldValue.arrayRemove(userId),
+          numOfFriends: friendData?.numOfFriends - 1,
+        });
+      return res.status(200).json({ message: 'Friend removed successfully!' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to remove friend!' });
+    }
   }
-});
+);
 
 export default socialRoutes;

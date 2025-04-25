@@ -36,6 +36,7 @@ const ProfileFeed = () => {
 
         if (friendContext) {
           if (fetchInfo.length > 0) {
+            friendContext.setUserId(fetchInfo[0].userId);
             friendContext.setUsername(fetchInfo[0].username);
             friendContext.setUserBio(fetchInfo[0].bio);
             friendContext.setUserStatus(fetchInfo[0].onlineStatus);
@@ -51,7 +52,7 @@ const ProfileFeed = () => {
     if (userId) {
       fetchFriends();
     }
-  }, [userId]);
+  }, [userId, friendContext]);
 
   return (
     <div
