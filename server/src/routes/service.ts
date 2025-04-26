@@ -74,28 +74,29 @@ serviceRoutes.get('/:type', async (req: Request, res: any) => {
     if (type === 'username') {
       const userSnapshot = await db
         .collection('users')
-        .where('username', '==', (query as string).toLowerCase())
+        .orderBy('username')
+        .startAt((query as string).toLowerCase())
+        .endAt((query as string).toLowerCase() + '\uf8ff') // Unicode trick to get "starts with"
+        .limit(5)
         .get();
 
       if (userSnapshot.empty) {
-        return res.status(404).json({ error: 'User not found!' });
+        return res.status(404).json({ error: 'No matching users found!' });
       }
 
-      const userDoc = userSnapshot.docs[0];
-      const userData = userDoc.data();
-
-      return res.status(200).json({
-        message: 'Successfully fetched user details!',
-        data: {
-          userId: userDoc.id,
+      const users = userSnapshot.docs.map((doc) => {
+        const userData = doc.data();
+        return {
+          userId: doc.id,
           username: userData?.username,
-          bio: userData?.bio,
           profilePic: userData?.profilePic,
           onlineStatus: userData?.onlineStatus,
-          numOfFriends: userData?.numOfFriends,
-          numOfCommunities: userData?.numOfCommunities,
-          numOfGames: userData?.numOfGames,
-        },
+        };
+      });
+
+      return res.status(200).json({
+        message: 'Successfully fetched user list!',
+        data: users,
       });
     }
 

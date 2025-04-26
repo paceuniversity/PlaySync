@@ -3,6 +3,7 @@ import { useAxios } from '../hooks/useAxios';
 import toast from 'react-hot-toast';
 import { IoChevronBackOutline } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProps {
   firstName: string;
@@ -13,6 +14,7 @@ interface UserProps {
 
 const ClientProfileSettings: React.FC = () => {
   const userId = localStorage.getItem('userId');
+  const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<UserProps>({
     firstName: '',
     lastName: '',
@@ -65,11 +67,36 @@ const ClientProfileSettings: React.FC = () => {
       });
 
       toast.success('User info updated successfully!');
-      setIsLoading(false);
     } catch (error) {
-      setIsLoading(false);
       console.error(error);
       toast.error('Failed to update user info!');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsLoading(true);
+
+    if (!userId) {
+      toast.error('Failed to delete account, please try again!');
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete account?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await useAxios.delete(`auth/${userId}`);
+
+      localStorage.removeItem('userId');
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete account, please try again!');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -188,6 +215,15 @@ const ClientProfileSettings: React.FC = () => {
             disabled={isLoading}
           >
             {isLoading ? 'Updating Account...' : 'Update Account'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            className="btn btn-secondary w-100 mt-2"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Deleting Account...' : 'Delete Account'}
           </button>
         </form>
       </div>

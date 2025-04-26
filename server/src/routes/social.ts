@@ -679,4 +679,75 @@ socialRoutes.delete(
   }
 );
 
+/**
+ * @swagger
+ * /social/check-friendship:
+ *   post:
+ *     summary: Check if two users are friends
+ *     tags: [Social]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - friendId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 description: The logged-in user's ID
+ *               friendId:
+ *                 type: string
+ *                 description: The user ID of the user being viewed
+ *     responses:
+ *       200:
+ *         description: Friendship status returned
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 areFriends:
+ *                   type: boolean
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: One or both users not found
+ *       500:
+ *         description: Internal server error
+ */
+
+socialRoutes.post('/check-friendship', async (req: Request, res: any) => {
+  try {
+    const { userId, friendId } = req.body;
+
+    if (!userId || !friendId) {
+      return res.status(400).json({ error: 'Missing required fields!' });
+    }
+
+    const [userDoc, friendDoc] = await Promise.all([
+      db.collection('users').doc(userId).get(),
+      db.collection('users').doc(friendId).get(),
+    ]);
+
+    if (!userDoc.exists || !friendDoc.exists) {
+      return res.status(404).json({ error: 'User not found!' });
+    }
+
+    const userData = userDoc.data();
+    const friendData = friendDoc.data();
+
+    const areFriends =
+      (userData?.friendsList || []).includes(friendId) &&
+      (friendData?.friendsList || []).includes(userId);
+
+    return res.status(200).json({ areFriends });
+  } catch (error) {
+    console.error('[CHECK FRIENDSHIP ERROR]', error);
+    res.status(500).json({ error: 'Failed to check friendship!' });
+  }
+});
+
 export default socialRoutes;
