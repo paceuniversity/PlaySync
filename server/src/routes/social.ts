@@ -50,6 +50,7 @@ const socialRoutes = express.Router();
 socialRoutes.post('/request', async (req: Request, res: any) => {
   try {
     const { recipientId, requestorId } = req.body;
+
     if (!recipientId || !requestorId)
       return res.status(400).json({ error: 'Missing fields' });
 
@@ -203,7 +204,7 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
 
 /**
  * @swagger
- * /social/{userId}:
+ * /social/requests/{userId}:
  *   get:
  *     summary: Get all friend requests for a specific user
  *     tags: [Social]
@@ -247,7 +248,7 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
  *         description: Failed to fetch user's friend requests
  */
 
-socialRoutes.get('/:userId', async (req: Request, res: any) => {
+socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
   try {
     const { userId } = req.params;
 
@@ -255,47 +256,46 @@ socialRoutes.get('/:userId', async (req: Request, res: any) => {
       return res.status(400).json({ error: 'Missing required fields!' });
     }
 
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
+    const friendReqSnapshot = await db
+      .collection('friendReq')
+      .where('recipientId', '==', userId)
+      .where('status', '==', 'pending')
+      .get();
 
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found!' });
-    }
-
-    const userData = userDoc.data();
-    const friendRequests = userData?.friendRequests || [];
-
-    if (friendRequests.length === 0) {
-      return res.status(200).json({ message: 'No friend requests found!' });
+    if (friendReqSnapshot.empty) {
+      return res
+        .status(200)
+        .json({ message: 'No friend requests found!', data: [] });
     }
 
     const requestData = await Promise.all(
-      friendRequests.map(async (reqId: string) => {
-        const reqRef = db.collection('friendReq').doc(reqId);
-        const reqDoc = await reqRef.get();
+      friendReqSnapshot.docs.map(async (doc) => {
+        const reqData = doc.data();
 
-        if (!reqDoc.exists) {
-          return null;
-        }
+        // Fetch requestor user info
+        const requestorSnap = await db
+          .collection('users')
+          .doc(reqData.requestorId)
+          .get();
+        const requestorData = requestorSnap.exists ? requestorSnap.data() : {};
 
-        const reqData = reqDoc.data();
         return {
-          reqId: reqDoc.id,
-          requestorId: reqData?.requestorId,
-          status: reqData?.status,
-          createdAt: reqData?.createdAt,
+          reqId: doc.id,
+          requestorId: reqData.requestorId,
+          requestorUsername: requestorData?.username || '',
+          status: reqData.status,
+          createdAt: reqData.createdAt,
         };
       })
     );
 
-    const filteredRequests = requestData.filter(Boolean);
-
     return res.status(200).json({
       message: "Successfully fetched user's friend requests!",
-      data: filteredRequests,
+      data: requestData,
     });
   } catch (error) {
-    res.status(500).json({ error: `Failed to user's friend request!` });
+    console.error('[FRIEND REQUEST FETCH ERROR]', error);
+    res.status(500).json({ error: `Failed to fetch user's friend requests!` });
   }
 });
 
@@ -660,7 +660,6 @@ socialRoutes.delete(
           .json({ error: 'Friend is not in your friends list!' });
       }
 
-      // Remove friend from both users' friends lists
       await userRef.update({
         friendsList: admin.firestore.FieldValue.arrayRemove(friendId),
         numOfFriends: userData?.numOfFriends - 1,
@@ -724,29 +723,45 @@ socialRoutes.post('/check-friendship', async (req: Request, res: any) => {
     const { userId, friendId } = req.body;
 
     if (!userId || !friendId) {
-      return res.status(400).json({ error: 'Missing required fields!' });
+      return res.status(400).json({ error: 'Missing fields!' });
     }
 
-    const [userDoc, friendDoc] = await Promise.all([
+    const [userSnap, friendSnap] = await Promise.all([
       db.collection('users').doc(userId).get(),
       db.collection('users').doc(friendId).get(),
     ]);
 
-    if (!userDoc.exists || !friendDoc.exists) {
+    if (!userSnap.exists || !friendSnap.exists) {
       return res.status(404).json({ error: 'User not found!' });
     }
 
-    const userData = userDoc.data();
-    const friendData = friendDoc.data();
+    const userData = userSnap.data();
+    const friendData = friendSnap.data();
 
-    const areFriends =
-      (userData?.friendsList || []).includes(friendId) &&
-      (friendData?.friendsList || []).includes(userId);
+    const userFriendsList = userData?.friendsList || [];
+    const friendFriendsList = friendData?.friendsList || [];
 
-    return res.status(200).json({ areFriends });
+    if (
+      userFriendsList.includes(friendId) &&
+      friendFriendsList.includes(userId)
+    ) {
+      return res.status(200).json({ status: 'friend' });
+    }
+
+    const pendingRequestsQuery = await db
+      .collection('friendReq')
+      .where('recipientId', 'in', [userId, friendId])
+      .where('requestorId', 'in', [userId, friendId])
+      .get();
+
+    if (!pendingRequestsQuery.empty) {
+      return res.status(200).json({ status: 'pending' });
+    }
+
+    return res.status(200).json({ status: 'none' });
   } catch (error) {
     console.error('[CHECK FRIENDSHIP ERROR]', error);
-    res.status(500).json({ error: 'Failed to check friendship!' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

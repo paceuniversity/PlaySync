@@ -16,27 +16,38 @@ const ProfileHeader = () => {
   const username = friend?.username || ' ';
   const bio = friend?.userBio || ' ';
   const userStatus = friend?.userStatus || 'offline';
-  const [isLoading, setIsLoading] = useState(false);
   const [isFriend, setIsFriend] = useState(false);
-
-  const axios = useAxios;
+  const [isPending, setIsPending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const checkFriendship = async () => {
+      if (!userId || !friendId) return;
+
       try {
         const response = await useAxios.post('/social/check-friendship', {
-          userId: userId,
-          friendId: friendId,
+          userId,
+          friendId,
         });
-        setIsFriend(response.data.areFriends);
+
+        const { status } = response.data;
+
+        if (status === 'friend') {
+          setIsFriend(true);
+          setIsPending(false);
+        } else if (status === 'pending') {
+          setIsFriend(false);
+          setIsPending(true);
+        } else {
+          setIsFriend(false);
+          setIsPending(false);
+        }
       } catch (error) {
         console.error('Error checking friendship:', error);
       }
     };
 
-    if (userId && friendId) {
-      checkFriendship();
-    }
+    checkFriendship();
   }, [userId, friendId]);
 
   const addFriend = async () => {
@@ -47,12 +58,13 @@ const ProfileHeader = () => {
 
     try {
       setIsLoading(true);
-      await axios.post(`social/request`, {
+      await useAxios.post(`social/request`, {
         recipientId: friendId,
         requestorId: userId,
       });
 
-      toast.success('Successfully sent friend request!');
+      toast.success('Friend request sent!');
+      setIsFriend(false);
     } catch (error) {
       console.error(error);
       toast.error('Failed to send friend request!');
@@ -74,12 +86,12 @@ const ProfileHeader = () => {
 
     try {
       setIsLoading(true);
-      await axios.delete(`social/remove-friend/${userId}`, {
+      await useAxios.delete(`social/remove-friend/${userId}`, {
         data: { friendUsername: username },
       });
 
       toast.success('Successfully removed friend!');
-      setIsFriend(false); // <-- Update state after removing
+      setIsFriend(false);
     } catch (error) {
       console.error(error);
       toast.error('Failed to remove friend!');
@@ -101,6 +113,8 @@ const ProfileHeader = () => {
     >
       {isFriend ? (
         <button
+          onClick={removeFriend}
+          disabled={isLoading}
           className="btn btn-danger"
           style={{
             position: 'absolute',
@@ -110,13 +124,27 @@ const ProfileHeader = () => {
             cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.6 : 1,
           }}
-          disabled={isLoading}
-          onClick={removeFriend}
         >
           {isLoading ? 'Removing...' : 'Unfriend'}
         </button>
+      ) : isPending ? (
+        <button
+          disabled
+          className="btn btn-secondary"
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            fontSize: '1rem',
+            opacity: 0.7,
+          }}
+        >
+          Pending...
+        </button>
       ) : (
         <button
+          onClick={addFriend}
+          disabled={isLoading}
           className="btn btn-primary"
           style={{
             position: 'absolute',
@@ -126,13 +154,12 @@ const ProfileHeader = () => {
             cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.6 : 1,
           }}
-          disabled={isLoading}
-          onClick={addFriend}
         >
           {isLoading ? 'Sending...' : 'Add Friend'}
         </button>
       )}
 
+      {/* --- Profile Details --- */}
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <img
           src={profileImage}
@@ -166,7 +193,6 @@ const ProfileHeader = () => {
             }}
           >
             <span>{username}</span>
-
             {userStatus === 'online' ? (
               <FaCircle style={{ color: 'limegreen', fontSize: '0.6rem' }} />
             ) : (
