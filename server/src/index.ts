@@ -28,6 +28,7 @@ app.use('/api/social', socialRoutes);
 app.use('/api/search', serviceRoutes);
 app.use('/api/popular-games', popularGamesRoute);
 
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}/api/docs`);
 });
