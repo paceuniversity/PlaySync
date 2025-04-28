@@ -206,7 +206,7 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
  * @swagger
  * /social/requests/{userId}:
  *   get:
- *     summary: Get all friend requests for a specific user
+ *     summary: Get all pending friend requests for a specific user
  *     tags: [Social]
  *     parameters:
  *       - in: path
@@ -225,6 +225,9 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
  *               properties:
  *                 message:
  *                   type: string
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of pending friend requests
  *                 data:
  *                   type: array
  *                   items:
@@ -232,14 +235,21 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
  *                     properties:
  *                       reqId:
  *                         type: string
+ *                         description: Friend request document ID
  *                       requestorId:
  *                         type: string
+ *                         description: ID of the user who sent the request
+ *                       requestorUsername:
+ *                         type: string
+ *                         description: Username of the user who sent the request
  *                       status:
  *                         type: string
  *                         enum: [pending, accept, rejected]
+ *                         description: Status of the friend request
  *                       createdAt:
  *                         type: string
  *                         format: date-time
+ *                         description: When the request was created
  *       400:
  *         description: Missing required fields
  *       404:
@@ -247,6 +257,7 @@ socialRoutes.get('/:reqId', async (req: Request, res: any) => {
  *       500:
  *         description: Failed to fetch user's friend requests
  */
+
 
 socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
   try {
@@ -262,6 +273,8 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
       .where('status', '==', 'pending')
       .get();
 
+    const totalRequests = friendReqSnapshot.size;
+
     if (friendReqSnapshot.empty) {
       return res
         .status(200)
@@ -272,7 +285,6 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
       friendReqSnapshot.docs.map(async (doc) => {
         const reqData = doc.data();
 
-        // Fetch requestor user info
         const requestorSnap = await db
           .collection('users')
           .doc(reqData.requestorId)
@@ -284,13 +296,14 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
           requestorId: reqData.requestorId,
           requestorUsername: requestorData?.username || '',
           status: reqData.status,
-          createdAt: reqData.createdAt,
+          createdAt: reqData.createdAt.toDate().toISOString(),
         };
       })
     );
 
     return res.status(200).json({
       message: "Successfully fetched user's friend requests!",
+      total: totalRequests,
       data: requestData,
     });
   } catch (error) {
@@ -303,7 +316,7 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
  * @swagger
  * /social/friends/{userId}:
  *   get:
- *     summary: Get a user's list of friends
+ *     summary: Get a user's list of friends (with pagination)
  *     tags: [Social]
  *     parameters:
  *       - in: path
@@ -312,6 +325,20 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
  *         schema:
  *           type: string
  *         description: The ID of the user whose friends list to fetch
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of friends to return (pagination limit)
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of friends to skip (pagination offset)
  *     responses:
  *       200:
  *         description: Successfully fetched friends list
@@ -322,6 +349,9 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
  *               properties:
  *                 message:
  *                   type: string
+ *                 total:
+ *                   type: integer
+ *                   description: Total number of friends
  *                 data:
  *                   type: array
  *                   items:
@@ -347,21 +377,32 @@ socialRoutes.get('/requests/:userId', async (req: Request, res: any) => {
 socialRoutes.get('/friends/:userId', async (req: Request, res: any) => {
   try {
     const { userId } = req.params;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const offset = parseInt(req.query.offset as string) || 0;
+
     const userSnap = await db.collection('users').doc(userId).get();
-    if (!userSnap.exists)
+    if (!userSnap.exists) {
       return res.status(404).json({ error: 'User not found' });
+    }
 
     const userData = userSnap.data();
     const friendsList: string[] = userData?.friendsList || [];
 
-    if (!friendsList.length)
-      return res
-        .status(200)
-        .json({ message: 'User has no friends!', data: [] });
+    if (!friendsList.length) {
+      return res.status(200).json({
+        message: 'User has no friends!',
+        total: 0,
+        data: [],
+      });
+    }
+
+    const totalFriends = friendsList.length;
+    const paginatedFriendsList = friendsList.slice(offset, offset + limit);
 
     const batch = await db.getAll(
-      ...friendsList.map((id) => db.collection('users').doc(id))
+      ...paginatedFriendsList.map((id) => db.collection('users').doc(id))
     );
+
     const friends = batch
       .filter((doc) => doc.exists)
       .map((doc) => {
@@ -374,8 +415,13 @@ socialRoutes.get('/friends/:userId', async (req: Request, res: any) => {
         };
       });
 
-    res.status(200).json({ message: 'Fetched friends list', data: friends });
+    res.status(200).json({
+      message: 'Fetched friends list!',
+      total: totalFriends,
+      data: friends,
+    });
   } catch (err) {
+    console.error('[FETCH FRIENDS ERROR]', err);
     res.status(500).json({ error: 'Failed to fetch friends' });
   }
 });

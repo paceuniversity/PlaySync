@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const DirectMessageComponent = () => {
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
 
-  // Placeholder array of messages/users
   const conversations = new Array(8).fill(null).map((_, idx) => ({
     id: idx,
     name: `User ${idx + 1}`,

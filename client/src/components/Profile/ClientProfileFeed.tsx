@@ -13,14 +13,6 @@ interface FriendsProps {
   onlineStatus: 'online' | 'offline';
 }
 
-interface FriendReqProps {
-  reqId: string;
-  requestorId: string;
-  requestorUsername: string;
-  createdAt: { seconds: number; nanoseconds: number };
-  status: string;
-}
-
 const ProfileFeed = () => {
   const userId = localStorage.getItem('userId');
   const friendContext = useFriend();
@@ -31,7 +23,6 @@ const ProfileFeed = () => {
   const [, setIsLoading] = useState(false);
 
   const [friends, setFriends] = useState<FriendsProps[]>([]);
-  const [friendReq, setFriendReq] = useState<FriendReqProps[]>([]);
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -54,29 +45,10 @@ const ProfileFeed = () => {
       }
     };
 
-    const fetchFriendReq = async () => {
-      try {
-        setIsLoading(true);
-        const response = await useAxios.get(`social/requests/${userId}`);
-        const fetchInfo: FriendReqProps[] = response.data.data;
-        setFriendReq(fetchInfo);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (userId) {
       fetchFriends();
-      fetchFriendReq();
     }
   }, [userId, friendContext]);
-
-  const formatDate = (timestamp: { seconds: number; nanoseconds: number }) => {
-    const date = new Date(timestamp.seconds * 1000);
-    return date.toLocaleDateString();
-  };
 
   return (
     <div
@@ -153,58 +125,6 @@ const ProfileFeed = () => {
               borderRadius: '10px',
             }}
           >
-            <h3 style={{ marginTop: '30px', fontSize: '1.2rem' }}>
-              Friend Requests
-            </h3>
-            {friendReq.length === 0 ? (
-              <p>No pending requests.</p>
-            ) : (
-              friendReq.map((req) => (
-                <div
-                  key={req.reqId}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '10px',
-                    borderBottom: '1px solid #3a4a5a',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                    }}
-                  >
-                    <img
-                      src={profileImage}
-                      alt="Avatar"
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 'bold' }}>
-                        {req.requestorUsername}
-                      </p>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: '0.8rem',
-                          color: 'lightgray',
-                        }}
-                      >
-                        Requested on {formatDate(req.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
             {friends.length === 0 ? (
               <p>No friends found.</p>
             ) : (
