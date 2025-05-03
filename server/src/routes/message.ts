@@ -50,7 +50,7 @@ messageRoutes.post('/start-chat', async (req: Request, res: any) => {
     const { user1Id, user2Id } = req.body;
 
     if (!user1Id || !user2Id) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'Missing required fields!',
       });
     }
@@ -70,7 +70,7 @@ messageRoutes.post('/start-chat', async (req: Request, res: any) => {
 
     return res.status(200).json({ message: 'Chat created!', chatId });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to start a chat!' });
+    return res.status(500).json({ error: 'Failed to start a chat!' });
   }
 });
 
@@ -121,7 +121,7 @@ messageRoutes.post('/send-message', async (req: Request, res: any) => {
     const { chatId, senderId, text } = req.body;
 
     if (!chatId || !senderId || !text) {
-      res.status(404).json({ error: 'Missing required fields!' });
+      return res.status(404).json({ error: 'Missing required fields!' });
     }
 
     const message = {
@@ -138,7 +138,7 @@ messageRoutes.post('/send-message', async (req: Request, res: any) => {
 
     return res.status(201).json({ message: 'Message sent successfully!' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to send message!' });
+    return res.status(500).json({ error: 'Failed to send message!' });
   }
 });
 
@@ -190,7 +190,7 @@ messageRoutes.get('/messages/:chatId', async (req: Request, res: any) => {
     const { chatId } = req.params;
 
     if (!chatId) {
-      res.status(404).json({ error: 'Missing required fields!' });
+      return res.status(404).json({ error: 'Missing required fields!' });
     }
 
     const messagesSnapshot = await db
@@ -210,7 +210,103 @@ messageRoutes.get('/messages/:chatId', async (req: Request, res: any) => {
       data: messages,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch message!' });
+    return res.status(500).json({ error: 'Failed to fetch message!' });
+  }
+});
+
+/**
+ * @swagger
+ * /message/chats/{userId}:
+ *   get:
+ *     summary: Get all chats involving the specified user
+ *     tags: [Message]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user whose chats to fetch
+ *     responses:
+ *       200:
+ *         description: Successfully fetched user chats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       chatId:
+ *                         type: string
+ *                       userId:
+ *                         type: string
+ *                       username:
+ *                         type: string
+ *                       profilePic:
+ *                         type: string
+ *                       onlineStatus:
+ *                         type: string
+ *                         enum: [online, offline]
+ *       500:
+ *         description: Failed to fetch chats
+ */
+
+messageRoutes.get('/chats/:userId', async (req: Request, res: any) => {
+  try {
+    const { userId } = req.params;
+
+    const snapshot = await db
+      .collection('chats')
+      .where('participants', 'array-contains', userId)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(200).json({ message: 'No chats found', data: [] });
+    }
+
+    const chats = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const chatData = doc.data();
+        const chatId = doc.id;
+
+        const otherUserId = chatData.participants.find(
+          (id: string) => id !== userId
+        );
+        if (!otherUserId) return null;
+
+        const otherUserSnap = await db
+          .collection('users')
+          .doc(otherUserId)
+          .get();
+        if (!otherUserSnap.exists) return null;
+
+        const otherUser = otherUserSnap.data();
+
+        return {
+          chatId,
+          userId: otherUserId,
+          username: otherUser?.username || 'Unknown',
+          profilePic: otherUser?.profilePictureUrl || '',
+          onlineStatus: otherUser?.onlineStatus || 'offline',
+        };
+      })
+    );
+
+    const validChats = chats.filter(Boolean);
+
+    res.status(200).json({
+      message: 'Fetched user chats successfully',
+      data: validChats,
+    });
+  } catch (error) {
+    console.error('[CHAT FETCH ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch chats' });
   }
 });
 
