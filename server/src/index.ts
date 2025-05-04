@@ -8,6 +8,8 @@ import authRoutes from './routes/auth';
 import socialRoutes from './routes/social';
 import popularGamesRoute from './routes/game';
 import serviceRoutes from './routes/service';
+import messageRoutes from './routes/message';
+import steamRoutes from './routes/steam';
 
 dotenv.config();
 
@@ -27,6 +29,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/social', socialRoutes);
 app.use('/api/search', serviceRoutes);
 app.use('/api/popular-games', popularGamesRoute);
+app.use('/api/message', messageRoutes);
+app.use('/api/steam', steamRoutes);
 
 
 app.listen(PORT, () => {

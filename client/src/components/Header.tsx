@@ -33,7 +33,7 @@ const Header: React.FC = () => {
       return;
     }
 
-    let searchType = 'username'; // Default
+    let searchType = 'username';
     let searchQuery = search.trim();
 
     if (search.startsWith('u/')) {
@@ -47,7 +47,7 @@ const Header: React.FC = () => {
       });
 
       const fetched = response.data.data;
-      setSearchResults(fetched); // expecting an array
+      setSearchResults(fetched);
       setShowDropdown(true);
     } catch (error) {
       console.error(error);
