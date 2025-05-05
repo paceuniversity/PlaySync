@@ -186,6 +186,29 @@ communityRoutes.get(
   }
 );
 
+communityRoutes.get(
+  '/communities/:communityId/members',
+  async (req: Request, res: any) => {
+    const { communityId } = req.params;
+
+    try {
+      const snapshot = await db
+        .collection('communityMembers')
+        .where('communityId', '==', communityId)
+        .get();
+
+      const members = snapshot.docs.map((doc) => doc.data());
+
+      return res.status(200).json({ members });
+    } catch (error) {
+      console.error('Error fetching community members:', error);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch community members' });
+    }
+  }
+);
+
 /**
  * @swagger
  * /communities/{communityId}/posts:
@@ -236,6 +259,7 @@ communityRoutes.post(
         .collection('communities')
         .doc(communityId)
         .get();
+
       if (!communityDoc.exists) {
         return res.status(404).json({ error: 'Community not found' });
       }
@@ -245,11 +269,14 @@ communityRoutes.post(
         return res.status(404).json({ error: 'User not found' });
       }
 
+      const { username } = userDoc.data() || {};
+
       const newPostRef = db.collection('communityPosts').doc();
       const postData = {
         id: newPostRef.id,
         communityId,
         authorId,
+        authorUsername: username || 'Unknown',
         content,
         createdAt: admin.firestore.Timestamp.now(),
         updatedAt: null,
@@ -259,11 +286,12 @@ communityRoutes.post(
 
       return res.status(201).json({ success: true, post: postData });
     } catch (error: any) {
-      console.error('Error creating post:', error.message);
+      console.error('[POST ROUTE] Error creating post:', error.message);
       return res.status(500).json({ error: 'Failed to create post' });
     }
   }
 );
+
 /**
  * @swagger
  * /communities/{communityId}/posts:
@@ -295,6 +323,7 @@ communityRoutes.get(
         .collection('communities')
         .doc(communityId)
         .get();
+
       if (!communityDoc.exists) {
         return res.status(404).json({ error: 'Community not found' });
       }
@@ -307,13 +336,33 @@ communityRoutes.get(
 
       const posts = postsSnapshot.docs.map((doc) => doc.data());
 
-      return res.status(200).json({ success: true, posts });
+      const authorIds = Array.from(new Set(posts.map((p: any) => p.authorId)));
+
+      const userDocs = await Promise.all(
+        authorIds.map((id) => db.collection('users').doc(id).get())
+      );
+
+      const userMap: Record<string, string> = {};
+      userDocs.forEach((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          userMap[doc.id] = data?.username || 'Unknown';
+        }
+      });
+
+      const enrichedPosts = posts.map((post: any) => ({
+        ...post,
+        authorUsername: userMap[post.authorId] || 'Unknown',
+      }));
+
+      return res.status(200).json({ success: true, posts: enrichedPosts });
     } catch (error: any) {
       console.error('Error fetching community posts:', error.message);
       return res.status(500).json({ error: 'Failed to fetch posts' });
     }
   }
 );
+
 /**
  * @swagger
  * /communities/{postId}/replies:
