@@ -18,7 +18,7 @@ const CommunityFeed = () => {
 
   const communityPosts: CommunityPost[] = [
     { author: 'Ilir', message: 'Just joined the community! Excited to play 🎮', timestamp: 'May 5, 2025' },
-    { author: 'Albin', message: 'Check out that new game in the library 👀', timestamp: 'May 4, 2025' },
+    { author: 'Archie', message: 'Check out that new game in the library 👀', timestamp: 'May 4, 2025' },
     { author: 'Cindy', message: 'Let’s plan a co-op session this weekend!', timestamp: 'May 3, 2025' },
   ];
 
