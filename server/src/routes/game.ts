@@ -39,75 +39,93 @@ const POPULARITY_MAP: Record<number, string> = {
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const popularGamesHandler: RequestHandler = async (req, res) => {
+  //handler required i can barely keep track of why
+  //handler required i can barely keep track of why
   try {
     const token = await fetchAccessToken();
-    const categories = [];
 
-    for (const [type, label] of Object.entries(POPULARITY_MAP)) {
-      await delay(300); // wait 300ms to avoid rate limiting
+    const categories = await Promise.all(
+      Object.entries(POPULARITY_MAP).map(async ([type, label]) => {
+        const popRes = await fetch(
+          "https://api.igdb.com/v4/popularity_primitives",
+          {
+            method: "POST",
+            headers: {
+              "Client-ID": process.env.CLIENT_ID!,
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "text/plain",
+            },
+            body: `
+            fields game_id;
+            sort value desc;
+            limit 10;
+            where popularity_type = ${type};
+          `,
+          }
+        );
 
-      const popRes = await fetch("https://api.igdb.com/v4/popularity_primitives", {
-        method: "POST",
-        headers: {
-          "Client-ID": process.env.CLIENT_ID!,
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "text/plain",
-        },
-        body: `
-          fields game_id;
-          sort value desc;
-          limit 10;
-          where popularity_type = ${type};
-        `,
-      });
+        if (!popRes.ok) {
+          console.error(
+            `popularity_primitives error for type ${type}:`,
+            popRes.statusText
+          );
+          return { label, games: [] };
+        }
 
-      if (!popRes.ok) {
-        console.error(`popularity_primitives error for type ${type}:`, popRes.statusText);
-        categories.push({ label, games: [] });
-        continue;
-      }
+        const popData = await popRes.json();
+        if (!Array.isArray(popData)) {
+          console.error(
+            `Expected array from popularity_primitives (type ${type}), got:`,
+            popData
+          );
+          return { label, games: [] };
+        }
 
-      const popData = await popRes.json();
-      const gameIds = popData.map((p: any) => p.game_id);
-      if (!Array.isArray(popData) || gameIds.length === 0) {
-        categories.push({ label, games: [] });
-        continue;
-      }
+        const gameIds = popData.map((p: any) => p.game_id);
+        if (gameIds.length === 0) {
+          return { label, games: [] };
+        }
 
-      const gamesRes = await fetch("https://api.igdb.com/v4/games", {
-        method: "POST",
-        headers: {
-          "Client-ID": process.env.CLIENT_ID!,
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "text/plain",
-        },
-        body: `
-          fields name, cover.url;
-          where id = (${gameIds.join(",")});
-        `,
-      });
+        const gamesRes = await fetch("https://api.igdb.com/v4/games", {
+          method: "POST",
+          headers: {
+            "Client-ID": process.env.CLIENT_ID!,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "text/plain",
+          },
+          body: `
+            fields name, cover.url;
+            where id = (${gameIds.join(",")});
+          `,
+        });
 
-      if (!gamesRes.ok) {
-        console.error(`games API error for type ${type}:`, gamesRes.statusText);
-        categories.push({ label, games: [] });
-        continue;
-      }
+        if (!gamesRes.ok) {
+          console.error(
+            `games API error for type ${type}:`,
+            gamesRes.statusText
+          );
+          return { label, games: [] };
+        }
 
-      const gamesData = await gamesRes.json();
-      if (!Array.isArray(gamesData)) {
-        categories.push({ label, games: [] });
-        continue;
-      }
+        const gamesData = await gamesRes.json();
+        if (!Array.isArray(gamesData)) {
+          console.error(
+            `Expected array from games API (type ${type}), got:`,
+            gamesData
+          );
+          return { label, games: [] };
+        }
 
-      const games = gamesData.map((g: any) => ({
-        name: g.name,
-        coverUrl: g.cover?.url
-          ? `https:${g.cover.url.replace("t_thumb", "t_cover_big")}`
-          : null,
-      }));
+        const games = gamesData.map((g: any) => ({
+          name: g.name,
+          coverUrl: g.cover?.url
+            ? `https:${g.cover.url.replace("t_thumb", "t_cover_big")}`
+            : null,
+        }));
 
-      categories.push({ label, games });
-    }
+        return { label, games };
+      })
+    );
 
     res.json({ categories });
   } catch (err) {
