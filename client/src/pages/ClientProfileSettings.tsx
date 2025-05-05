@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useAxios } from '../hooks/useAxios';
 import toast from 'react-hot-toast';
 import { IoChevronBackOutline } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface UserProps {
   firstName: string;
   lastName: string;
   username: string;
   bio?: string;
+  linkedAccounts?: string[];
 }
 
 const ClientProfileSettings: React.FC = () => {
@@ -39,6 +39,7 @@ const ClientProfileSettings: React.FC = () => {
           lastName: fetchInfo.lastName,
           username: fetchInfo.username,
           bio: fetchInfo.bio,
+          linkedAccounts: fetchInfo.linkedAccounts || [],
         });
       } catch (error: unknown) {
         console.error(error);
@@ -50,10 +51,18 @@ const ClientProfileSettings: React.FC = () => {
     }
   }, [userId]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('linked') === 'steam') {
+      toast.success('Steam account successfully linked!');
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!userInfo.firstName || !userInfo.lastName || !userInfo.username) {
       toast.error('Please fill in all fields!');
+      return;
     }
 
     setIsLoading(true);
@@ -89,12 +98,49 @@ const ClientProfileSettings: React.FC = () => {
 
     try {
       await useAxios.delete(`auth/${userId}`);
-
       localStorage.removeItem('userId');
       navigate('/');
     } catch (error) {
       console.error(error);
       toast.error('Failed to delete account, please try again!');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSteamConnect = () => {
+    if (!userId) {
+      toast.error('You must be logged in to connect Steam');
+      return;
+    }
+    window.location.href = `http://localhost:3000/api/steam/steam?userId=${userId}`;
+  };
+
+  const [riotUsername, setRiotUsername] = useState('');
+  const [riotTag, setRiotTag] = useState('');
+  const [showRiotForm, setShowRiotForm] = useState(false);
+
+  const handleRiotConnect = async () => {
+    if (!userId || !riotUsername || !riotTag) {
+      toast.error('Please fill in both Riot username and tag!');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await useAxios.post('riot/connect', {
+        userId,
+        username: riotUsername,
+        tag: riotTag,
+      });
+      toast.success('Riot account successfully linked!');
+      setUserInfo((prev) => ({
+        ...prev,
+        linkedAccounts: [...(prev.linkedAccounts || []), 'riot'],
+      }));
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to link Riot account.');
     } finally {
       setIsLoading(false);
     }
@@ -225,6 +271,74 @@ const ClientProfileSettings: React.FC = () => {
           >
             {isLoading ? 'Deleting Account...' : 'Delete Account'}
           </button>
+
+          {!userInfo.linkedAccounts?.includes('steam') && (
+            <button
+              type="button"
+              onClick={handleSteamConnect}
+              className="btn btn-success w-100 mt-4"
+            >
+              Connect Steam Account
+            </button>
+          )}
+
+          {!userInfo.linkedAccounts?.includes('riot') && !showRiotForm && (
+            <button
+              type="button"
+              onClick={() => setShowRiotForm(true)}
+              className="btn btn-danger w-100 mt-2"
+            >
+              Link Riot Account
+            </button>
+          )}
+
+          {showRiotForm && !userInfo.linkedAccounts?.includes('riot') && (
+            <>
+              <div className="mb-3 mt-4">
+                <label htmlFor="riotUsername" className="form-label">
+                  Riot Username
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="riotUsername"
+                  placeholder="e.g., T1Faker"
+                  value={riotUsername}
+                  onChange={(e) => setRiotUsername(e.target.value)}
+                />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="riotTag" className="form-label">
+                  Riot Tagline
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="riotTag"
+                  placeholder="e.g., KR1"
+                  value={riotTag}
+                  onChange={(e) => setRiotTag(e.target.value)}
+                />
+              </div>
+              <div className="d-flex justify-content-between">
+                <button
+                  type="button"
+                  onClick={handleRiotConnect}
+                  className="btn btn-danger"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Connecting...' : 'Submit Riot Info'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRiotForm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>

@@ -10,6 +10,8 @@ import popularGamesRoute from './routes/game';
 import serviceRoutes from './routes/service';
 import messageRoutes from './routes/message';
 import steamRoutes from './routes/steam';
+import riotRoutes from './routes/riot';
+import communityRoutes from './routes/commnity';
 
 
 dotenv.config();
@@ -32,7 +34,8 @@ app.use('/api/search', serviceRoutes);
 app.use('/api/popular-games', popularGamesRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/steam', steamRoutes);
-
+app.use('/api/riot', riotRoutes);
+app.use('/api', communityRoutes);
 
 
 app.listen(PORT, () => {

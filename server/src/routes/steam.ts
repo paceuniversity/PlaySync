@@ -6,12 +6,30 @@ import session from 'express-session';
 import SteamStrategy from 'passport-steam';
 import { db } from '../firebase/firebase';
 
+interface SteamProfile {
+  id: string;
+  displayName: string;
+  photos: { value: string }[];
+}
+
 const steamRoutes = express.Router();
 const STEAM_API_KEY = '3BD5BF4E0C45D545CC8861D6351840E7';
+const SESSION_SECRET = 'S9dK3!vG82f$z@1r4zLQp8MvNtXj62Yw';
 
-passport.serializeUser((user, done) => {
-  done(null, user);
+declare module 'express-session' {
+  interface SessionData {
+    userId: string;
+  }
+}
+
+interface ExtendedSteamProfile extends SteamProfile {
+  sessionUserId?: string;
+}
+
+passport.serializeUser((user: any, done) => {
+  done(null, { ...user, sessionUserId: (user as any).sessionUserId });
 });
+
 passport.deserializeUser((obj: any, done) => {
   done(null, obj);
 });
@@ -19,11 +37,13 @@ passport.deserializeUser((obj: any, done) => {
 passport.use(
   new SteamStrategy(
     {
-      returnURL: 'http://localhost:3001/steam/return',
-      realm: 'http://localhost:3001/',
+      returnURL: 'http://localhost:3000/api/steam/return',
+      realm: 'http://localhost:3000/',
       apiKey: STEAM_API_KEY,
+      passReqToCallback: true,
     },
-    async (identifier, profile, done) => {
+    async (req, identifier, profile: ExtendedSteamProfile, done) => {
+      profile.sessionUserId = (req.session as any).userId;
       return done(null, profile);
     }
   )
@@ -31,11 +51,17 @@ passport.use(
 
 steamRoutes.use(
   session({
-    secret: 'your-secret',
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      sameSite: 'lax',
+    },
   })
 );
+
 steamRoutes.use(passport.initialize());
 steamRoutes.use(passport.session());
 
@@ -50,41 +76,39 @@ steamRoutes.use(passport.session());
  *         description: Redirects to Steam login page
  */
 
-steamRoutes.get('/steam', passport.authenticate('steam'));
-
-/**
- * @swagger
- * /steam/steam/connect/:userId:
- *   get:
- *     summary: Steam OAuth callback that links user's Steam account
- *     tags: [Steam]
- *     parameters:
- *       - in: query
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID of the current app user linking their Steam account
- *     responses:
- *       302:
- *         description: Redirects to frontend settings page after linking
- *       404:
- *         description: User not found in Firebase
- *       500:
- *         description: Failed to store Steam account info
- */
-
 steamRoutes.get(
-  '/steam/connect/:userId',
-  passport.authenticate('steam', { failureRedirect: '/' }),
-  async (req: Request, res: any) => {
-    const { userId } = req.params;
+  '/steam',
+  (req: Request, res: any, next) => {
+    const userId = Array.isArray(req.query.userId)
+      ? req.query.userId[0]
+      : req.query.userId;
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Missing required fields!' });
+    if (typeof userId !== 'string' || !userId.trim()) {
+      return res.status(400).send('Invalid or missing userId');
     }
 
-    const steamProfile = req.user as any;
+    req.session.userId = userId;
+    console.log('Session set:', req.session);
+    next();
+  },
+  passport.authenticate('steam')
+);
+
+steamRoutes.get(
+  '/return',
+  passport.authenticate('steam', { failureRedirect: '/' }),
+  async (req: Request, res: any) => {
+    console.log('Session on return:', req.session);
+    console.log('User ID in session:', req.session.userId);
+
+    const steamProfile = req.user as ExtendedSteamProfile;
+
+    const userId = steamProfile.sessionUserId || req.session.userId;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing session userId' });
+    }
+
     const steamId = steamProfile.id;
     const displayName = steamProfile.displayName;
     const avatar = steamProfile.photos?.[0]?.value;
@@ -110,7 +134,7 @@ steamRoutes.get(
             steamId,
             displayName,
             avatar,
-            connectedAt: new Date(),
+            connectedAt: admin.firestore.Timestamp.now(),
           },
           steamId,
           linkedAccounts: updatedLinked,
@@ -118,10 +142,12 @@ steamRoutes.get(
         { merge: true }
       );
 
-      res.redirect(`http://localhost:5173/settings?linked=steam`);
+      return res.redirect(
+        'http://localhost:5173/profile-settings?linked=steam'
+      );
     } catch (err) {
       console.error('Steam connect failed:', err);
-      res.status(500).json({ error: 'Failed to link Steam account' });
+      return res.status(500).json({ error: 'Failed to link Steam account' });
     }
   }
 );
