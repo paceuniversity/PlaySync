@@ -13,6 +13,15 @@ interface FriendsProps {
   onlineStatus: 'online' | 'offline';
 }
 
+type UnifiedGame = {
+  type: 'steam' | 'riot';
+  id: string;
+  name: string;
+  platform: string;
+  imageUrl?: string;
+  details: string;
+};
+
 const ProfileFeed = () => {
   const userId = localStorage.getItem('userId');
   const friendContext = useFriend();
@@ -20,9 +29,9 @@ const ProfileFeed = () => {
   const profileImage = profilePicture;
 
   const [activeTab, setActiveTab] = useState<'library' | 'friends'>('library');
-  const [, setIsLoading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const [friends, setFriends] = useState<FriendsProps[]>([]);
+  const [games, setGames] = useState<UnifiedGame[]>([]);
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -50,6 +59,69 @@ const ProfileFeed = () => {
     }
   }, [userId, friendContext]);
 
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        setIsLoading(true);
+        const userRes = await useAxios.get(`auth/${userId}`);
+        const { steamId, riotId } = userRes.data.data;
+
+        const promises = [];
+
+        if (steamId) {
+          promises.push(
+            useAxios.get(`steam/games/${steamId}`).then((res) =>
+              (res.data.games || []).map((g: { appid: number; name: string; playtime_forever: number }) => ({
+                type: 'steam',
+                id: String(g.appid),
+                name: g.name,
+                platform: 'Steam',
+                imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
+                details: `Hours played: ${(g.playtime_forever / 60).toFixed(
+                  1
+                )} hrs`,
+              }))
+            )
+          );
+        }
+
+        if (riotId) {
+          promises.push(
+            useAxios.get(`riot/matches/${riotId}`).then((res) =>
+              (res.data.matches || []).map((match: { metadata: { matchId: string }; info: { gameMode: string } }) => ({
+                type: 'riot',
+                id: match.metadata.matchId,
+                name: `Match ID: ${match.metadata.matchId}`,
+                platform: 'Riot',
+                details: `Game Mode: ${match.info.gameMode}`,
+              }))
+            )
+          );
+        }
+
+        const results = await Promise.all(promises);
+        const combined = results.flat();
+        setGames(combined);
+      } catch (err) {
+        console.error('Error fetching games:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchGames();
+    }
+  }, [userId]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const gamesPerPage = 10;
+
+  const indexOfLastGame = currentPage * gamesPerPage;
+  const indexOfFirstGame = indexOfLastGame - gamesPerPage;
+  const currentGames = games.slice(indexOfFirstGame, indexOfLastGame);
+  const totalPages = Math.ceil(games.length / gamesPerPage);
+
   return (
     <div
       style={{
@@ -61,7 +133,7 @@ const ProfileFeed = () => {
         margin: '0 auto',
       }}
     >
-      {/* Header and Tab Buttons */}
+      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -111,10 +183,90 @@ const ProfileFeed = () => {
 
       {/* Content */}
       <div style={{ marginTop: '20px', color: 'white' }}>
-        {activeTab === 'library' ? (
-          <div>
-            <p>My Game Library (content coming soon...)</p>
-          </div>
+        {isLoading ? (
+          <p>Fetching info...</p>
+        ) : activeTab === 'library' ? (
+          games.length === 0 ? (
+            <p>No games found.</p>
+          ) : (
+            <>
+              {currentGames.map((game) => (
+                <div
+                  key={game.id}
+                  style={{
+                    backgroundColor: '#2c3e50',
+                    padding: '15px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    gap: '15px',
+                    alignItems: 'center',
+                  }}
+                >
+                  {game.imageUrl && (
+                    <img
+                      src={game.imageUrl}
+                      alt={`${game.name} cover`}
+                      style={{
+                        width: '120px',
+                        height: '45px',
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://store.steampowered.com/public/images/v6/default_game_capsule_sm_120.jpg';
+                      }}
+                    />
+                  )}
+                  <div>
+                    <h4 style={{ margin: 0 }}>{game.name}</h4>
+                    <p style={{ margin: '5px 0' }}>{game.details}</p>
+                    <p style={{ margin: '5px 0' }}>Platform: {game.platform}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Pagination */}
+              <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  style={{
+                    backgroundColor: '#0076ff',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+                <span style={{ alignSelf: 'center' }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  style={{
+                    backgroundColor: '#0076ff',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    cursor:
+                      currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </>
+          )
         ) : (
           <div
             style={{
@@ -180,14 +332,10 @@ const ProfileFeed = () => {
                             },
                           })
                         }
-                        style={{
-                          color: 'white',
-                          cursor: 'pointer',
-                        }}
+                        style={{ color: 'white', cursor: 'pointer' }}
                       >
                         {friend.username}
                       </span>
-
                       {friend.onlineStatus === 'online' ? (
                         <FaCircle
                           style={{ color: 'limegreen', fontSize: '0.6rem' }}

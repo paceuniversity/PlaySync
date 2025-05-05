@@ -8,11 +8,12 @@ import Dashboard from './pages/Dashboard';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import DirectMessage from './pages/DirectMessage';
-import Community from './pages/CommunityTemplate';
 import ForgotPasswordReq from './pages/auth/ForgotPassword/ForgotPasswordReq';
 import ClientProfileSettings from './pages/ClientProfileSettings';
 import ClientProfile from './pages/ClientProfile';
 import UserProfile from './pages/UserProfile';
+import ClientCommunity from './pages/ClientCommunity';
+import CreateCommunityPage from './pages/CreateCommunity';
 
 function App() {
   const queryClient = new QueryClient();
@@ -54,7 +55,8 @@ function App() {
         />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/direct-message" element={<DirectMessage />} />
-        <Route path="/community" element={<Community />} />
+        <Route path="/community" element={<ClientCommunity />} />
+        <Route path="/create-community" element={<CreateCommunityPage />} />
       </Routes>
     </QueryClientProvider>
   );

@@ -76,7 +76,7 @@ serviceRoutes.get('/:type', async (req: Request, res: any) => {
         .collection('users')
         .orderBy('username')
         .startAt((query as string).toLowerCase())
-        .endAt((query as string).toLowerCase() + '\uf8ff') // Unicode trick to get "starts with"
+        .endAt((query as string).toLowerCase() + '\uf8ff')
         .limit(5)
         .get();
 
@@ -100,8 +100,36 @@ serviceRoutes.get('/:type', async (req: Request, res: any) => {
       });
     }
 
-    // Future example: if (type === 'game') { ... }
-    // Future example: if (type === 'community') { ... }
+    if (type === 'community') {
+      const communitySnapshot = await db
+        .collection('communities')
+        .orderBy('name')
+        .startAt((query as string).toLowerCase())
+        .endAt((query as string).toLowerCase() + '\uf8ff')
+        .limit(5)
+        .get();
+
+      if (communitySnapshot.empty) {
+        return res
+          .status(404)
+          .json({ error: 'No matching communities found!' });
+      }
+
+      const communities = communitySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          description: data.description,
+          profilePictureUrl: data.profilePictureUrl || '',
+        };
+      });
+
+      return res.status(200).json({
+        message: 'Successfully fetched community list!',
+        data: communities,
+      });
+    }
 
     return res.status(400).json({ error: 'Invalid search type!' });
   } catch (error) {
