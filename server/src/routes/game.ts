@@ -36,6 +36,8 @@ const POPULARITY_MAP: Record<number, string> = {
   8: "Steam Total Reviews",
 };
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const popularGamesHandler: RequestHandler = async (req, res) => {
   //handler required i can barely keep track of why
   //handler required i can barely keep track of why

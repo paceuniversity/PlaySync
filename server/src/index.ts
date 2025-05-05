@@ -13,6 +13,7 @@ import steamRoutes from './routes/steam';
 import riotRoutes from './routes/riot';
 import communityRoutes from './routes/commnity';
 
+
 dotenv.config();
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api/message', messageRoutes);
 app.use('/api/steam', steamRoutes);
 app.use('/api/riot', riotRoutes);
 app.use('/api', communityRoutes);
+
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}/api/docs`);
