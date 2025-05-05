@@ -7,7 +7,7 @@ type CommunityData = {
 };
 
 const CommunityFeed = () => {
-  const [activeTab, setActiveTab] = useState<'library' | 'friends'>('library');
+  const [activeTab, setActiveTab] = useState<'Feed' | 'Community Info'>('Feed');
   const [community, setCommunity] = useState<CommunityData | null>(null);
 
   useEffect(() => {
@@ -38,27 +38,27 @@ const CommunityFeed = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             style={{
-              backgroundColor: activeTab === 'library' ? '#0076ff' : '#2c3e50',
+              backgroundColor: activeTab === 'Feed' ? '#0076ff' : '#2c3e50',
               color: 'white',
               padding: '8px 16px',
               borderRadius: '5px',
               border: 'none',
               cursor: 'pointer',
             }}
-            onClick={() => setActiveTab('library')}
+            onClick={() => setActiveTab('Feed')}
           >
             Feed
           </button>
           <button
             style={{
-              backgroundColor: activeTab === 'friends' ? '#0076ff' : '#2c3e50',
+              backgroundColor: activeTab === 'Community Info' ? '#0076ff' : '#2c3e50',
               color: 'white',
               padding: '8px 16px',
               borderRadius: '5px',
               border: 'none',
               cursor: 'pointer',
             }}
-            onClick={() => setActiveTab('friends')}
+            onClick={() => setActiveTab('Community Info')}
           >
             Community Info
           </button>
@@ -66,7 +66,7 @@ const CommunityFeed = () => {
       </div>
 
       <div style={{ marginTop: '20px', color: 'white' }}>
-        {activeTab === 'library' ? (
+        {activeTab === 'Feed' ? (
           <p>Feed (content coming soon...)</p>
         ) : (
           <div>
