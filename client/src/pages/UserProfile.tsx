@@ -7,6 +7,7 @@ import { useFriend } from '../context/PublicProfileContext';
 
 const UserProfile = () => {
   const friendContext = useFriend();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { state } = useLocation() as { state?: any };
 
   useEffect(() => {
@@ -18,7 +19,7 @@ const UserProfile = () => {
     if (username) friendContext.setUsername(username);
     if (userBio) friendContext.setUserBio(userBio);
     if (userStatus) friendContext.setUserStatus(userStatus);
-  }, [state]);
+  }, [state, friendContext]);
 
   return (
     <div style={{ backgroundColor: '#223142', minHeight: '100vh' }}>
