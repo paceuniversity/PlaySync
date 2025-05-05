@@ -1,5 +1,11 @@
 import profilePicture from '../../assets/Profile-PNG.png';
 
+type CommunityData = {
+  name: string;
+  members: number;
+  description: string;
+};
+
 const CommunityHeader = () => {
   const communityImage = profilePicture;
 
