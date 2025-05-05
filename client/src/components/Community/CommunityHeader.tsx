@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import profilePicture from '../../assets/Profile-PNG.png';
 
 type CommunityData = {
@@ -8,6 +9,26 @@ type CommunityData = {
 
 const CommunityHeader = () => {
   const communityImage = profilePicture;
+
+  const [community, setCommunity] = useState<CommunityData | null>(null);
+  const [joined, setJoined] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/community')
+      .then((res) => res.json())
+      .then((data) => setCommunity(data));
+  }, []);
+
+  const handleJoin = () => {
+    fetch('/api/join', { method: 'POST' })
+      .then((res) => res.json())
+      .then((data) => {
+        setJoined(true);
+        setCommunity((prev) =>
+          prev ? { ...prev, members: data.members } : null
+        );
+      });
+  };
 
   return (
     <div
@@ -78,3 +99,4 @@ const CommunityHeader = () => {
 };
 
 export default CommunityHeader;
+
