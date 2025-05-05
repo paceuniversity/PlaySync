@@ -11,17 +11,27 @@ import toast from 'react-hot-toast';
 import { useAxios } from '../hooks/useAxios';
 import profilePicture from '../assets/Profile-PNG.png';
 
+type UserResult = {
+  type: 'user';
+  userId: string;
+  username: string;
+  profilePic: string;
+  onlineStatus: 'online' | 'offline';
+};
+
+type CommunityResult = {
+  type: 'community';
+  id: string;
+  name: string;
+  description: string;
+  profilePictureUrl: string;
+};
+
+type SearchResult = UserResult | CommunityResult;
+
 const Header: React.FC = () => {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
-
-  interface SearchResult {
-    profilePic: string;
-    userId: string;
-    username: string;
-    onlineStatus: 'online' | 'offline';
-  }
-
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -34,9 +44,12 @@ const Header: React.FC = () => {
     }
 
     let searchType = 'username';
-    let searchQuery = search.trim();
+    let searchQuery = search.trim().toLowerCase();
 
-    if (search.startsWith('u/')) {
+    if (search.startsWith('c/')) {
+      searchType = 'community';
+      searchQuery = search.slice(2);
+    } else if (search.startsWith('u/')) {
       searchType = 'username';
       searchQuery = search.slice(2);
     }
@@ -47,7 +60,35 @@ const Header: React.FC = () => {
       });
 
       const fetched = response.data.data;
-      setSearchResults(fetched);
+
+      if (searchType === 'username') {
+        const users: UserResult[] = fetched.map(
+          (user: {
+            userId: string;
+            username: string;
+            profilePic: string;
+            onlineStatus: 'online' | 'offline';
+          }) => ({
+            ...user,
+            type: 'user',
+          })
+        );
+        setSearchResults(users);
+      } else if (searchType === 'community') {
+        const communities: CommunityResult[] = fetched.map(
+          (comm: {
+            id: string;
+            name: string;
+            description: string;
+            profilePictureUrl: string;
+          }) => ({
+            ...comm,
+            type: 'community',
+          })
+        );
+        setSearchResults(communities);
+      }
+
       setShowDropdown(true);
     } catch (error) {
       console.error(error);
@@ -76,7 +117,6 @@ const Header: React.FC = () => {
             <span className="fw-bold">PlaySync</span>
           </Link>
         </div>
-
         <div
           className="d-none d-lg-flex gap-4 align-items-center"
           style={{ position: 'relative' }}
@@ -111,59 +151,96 @@ const Header: React.FC = () => {
                 padding: '10px',
               }}
             >
-              {searchResults.map((result) => (
-                <span
-                  key={result.userId}
-                  onClick={() => {
-                    navigate('/user-profile', {
-                      state: {
-                        userId: result.userId,
-                        username: result.username,
-                        userStatus: result.onlineStatus,
-                      },
-                    });
-                    setShowDropdown(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    padding: '8px',
-                    cursor: 'pointer',
-                    color: '#333',
-                    borderBottom: '1px solid #ccc',
-                  }}
-                >
-                  <img
-                    src={result.profilePic || profilePicture}
-                    alt="Profile"
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
+              {searchResults.map((result) =>
+                result.type === 'user' ? (
+                  <span
+                    key={result.userId}
+                    onClick={() => {
+                      navigate('/user-profile', {
+                        state: {
+                          userId: result.userId,
+                          username: result.username,
+                          userStatus: result.onlineStatus,
+                        },
+                      });
+                      setShowDropdown(false);
                     }}
-                  />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontWeight: 'bold', color: 'black' }}>
-                      {result.username}
-                    </span>
-                    <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px',
+                      cursor: 'pointer',
+                      color: '#333',
+                      borderBottom: '1px solid #ccc',
+                    }}
+                  >
+                    <img
+                      src={result.profilePic || profilePicture}
+                      alt="Profile"
                       style={{
-                        fontSize: '0.8rem',
-                        color:
-                          result.onlineStatus === 'online' ? 'green' : 'red',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
                       }}
-                    >
-                      {result.onlineStatus}
-                    </span>
-                  </div>
-                </span>
-              ))}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 'bold', color: 'black' }}>
+                        {result.username}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.8rem',
+                          color:
+                            result.onlineStatus === 'online' ? 'green' : 'red',
+                        }}
+                      >
+                        {result.onlineStatus}
+                      </span>
+                    </div>
+                  </span>
+                ) : (
+                  <span
+                    key={result.id}
+                    onClick={() => {
+                      navigate(`/communities/${result.id}`);
+                      setShowDropdown(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px',
+                      cursor: 'pointer',
+                      color: '#333',
+                      borderBottom: '1px solid #ccc',
+                    }}
+                  >
+                    <img
+                      src={result.profilePictureUrl || profilePicture}
+                      alt="Community"
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 'bold', color: 'black' }}>
+                        {result.name}
+                      </span>
+                      <span style={{ fontSize: '0.8rem', color: '#444' }}>
+                        {result.description}
+                      </span>
+                    </div>
+                  </span>
+                )
+              )}
             </div>
           )}
         </div>
-
         <div className="dropdown d-flex align-items-center gap-4">
           <Link to="/dashboard" className="nav-link text-dark">
             <IoHome size={28} className="text-primary" />

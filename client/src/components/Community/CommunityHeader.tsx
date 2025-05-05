@@ -1,7 +1,73 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
 import profilePicture from '../../assets/Profile-PNG.png';
+import { useAxios } from '../../hooks/useAxios';
+import { FaCog } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
-const CommunityHeader = () => {
+const CommunityHeader: React.FC<{ communityId: string }> = ({
+  communityId,
+}) => {
+  const userId = localStorage.getItem('userId');
+  const [community, setCommunity] = useState<any>(null);
+  const [isMember, setIsMember] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
   const communityImage = profilePicture;
+
+  useEffect(() => {
+    const fetchCommunityInfo = async () => {
+      try {
+        const [commRes, membersRes] = await Promise.all([
+          useAxios.get(`/communities/${communityId}`),
+          useAxios.get(`/communities/${communityId}/members`),
+        ]);
+
+        const communityData = commRes.data.community;
+        const members = membersRes.data.members || [];
+
+        setCommunity(communityData);
+        setMemberCount(members.length);
+        setIsMember(members.some((m: any) => m.userId === userId));
+        setIsAdmin(
+          members.some((m: any) => m.userId === userId && m.role === 'admin')
+        );
+      } catch (err) {
+        console.error('Failed to load community:', err);
+        toast.error('Failed to load community info');
+      }
+    };
+
+    if (communityId && userId) fetchCommunityInfo();
+  }, [communityId, userId]);
+
+  const handleJoin = async () => {
+    try {
+      await useAxios.post(`/communities/${communityId}/join`, {
+        userId,
+      });
+      toast.success('Joined community!');
+      setIsMember(true);
+      setMemberCount((prev) => prev + 1);
+    } catch (err) {
+      console.log(err);
+      toast.error('Failed to join community.');
+    }
+  };
+
+  const handleLeave = async () => {
+    try {
+      await useAxios.delete(`/${communityId}/leave/${userId}`);
+      toast.success('Left community.');
+      setIsMember(false);
+      setMemberCount((prev) => prev - 1);
+    } catch (err) {
+      console.log(err);
+      toast.error('Failed to leave community.');
+    }
+  };
+
+  if (!community) return null;
 
   return (
     <div
@@ -15,8 +81,8 @@ const CommunityHeader = () => {
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <img
-          src={communityImage}
-          alt="Avatar"
+          src={community.profilePictureUrl || communityImage}
+          alt="Community Avatar"
           style={{
             width: '100px',
             height: '100px',
@@ -25,47 +91,62 @@ const CommunityHeader = () => {
             marginRight: '20px',
           }}
         />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px',
+            flexWrap: 'wrap',
+          }}
+        >
           <h2
             style={{
               color: 'white',
               fontWeight: 'bold',
               fontSize: '1.25rem',
               margin: 0,
-              whiteSpace: 'nowrap',
             }}
           >
-            Game Community
+            {community.name}
           </h2>
           <p
             style={{
               color: 'white',
               fontSize: '1rem',
               margin: 0,
-              whiteSpace: 'nowrap',
             }}
           >
-            Members: x
+            Members: {memberCount}
           </p>
-          <button type="submit" className="btn btn-primary">
-            Join!
-          </button>
+
+          {isAdmin && (
+            <FaCog
+              style={{
+                color: 'white',
+                fontSize: '1.25rem',
+                cursor: 'pointer',
+              }}
+              title="Admin Settings"
+            />
+          )}
+
+          {isMember ? (
+            <button
+              onClick={handleLeave}
+              className="btn btn-outline-light btn-sm"
+            >
+              Leave
+            </button>
+          ) : (
+            <button onClick={handleJoin} className="btn btn-primary btn-sm">
+              Join!
+            </button>
+          )}
         </div>
-        <br />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <p
-          style={{
-            color: 'white',
-            fontSize: '1rem',
-            margin: 0,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Welcome to X community! Please be respectful, and follow community
-          guidelines
-        </p>
+
+      <div style={{ marginTop: '10px' }}>
+        <p style={{ color: 'white' }}>{community.description}</p>
       </div>
     </div>
   );

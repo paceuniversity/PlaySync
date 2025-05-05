@@ -14,6 +14,8 @@ import ClientProfile from './pages/ClientProfile';
 import UserProfile from './pages/UserProfile';
 import ClientCommunity from './pages/ClientCommunity';
 import CreateCommunityPage from './pages/CreateCommunity';
+import Community from './pages/CommunityTemplate';
+import FullPostView from './pages/FullPagePostView';
 
 function App() {
   const queryClient = new QueryClient();
@@ -57,6 +59,11 @@ function App() {
         <Route path="/direct-message" element={<DirectMessage />} />
         <Route path="/community" element={<ClientCommunity />} />
         <Route path="/create-community" element={<CreateCommunityPage />} />
+        <Route path="/communities/:communityId" element={<Community />} />
+        <Route
+          path="/communities/:communityId/posts/:postId"
+          element={<FullPostView />}
+        />
       </Routes>
     </QueryClientProvider>
   );
