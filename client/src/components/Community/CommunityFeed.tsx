@@ -6,9 +6,21 @@ type CommunityData = {
   description: string;
 };
 
+type CommunityPost = {
+  author: string;
+  message: string;
+  timestamp: string;
+};
+
 const CommunityFeed = () => {
   const [activeTab, setActiveTab] = useState<'Feed' | 'Community Info'>('Feed');
   const [community, setCommunity] = useState<CommunityData | null>(null);
+
+  const communityPosts: CommunityPost[] = [
+    { author: 'Ilir', message: 'Just joined the community! Excited to play 🎮', timestamp: 'May 5, 2025' },
+    { author: 'Albin', message: 'Check out that new game in the library 👀', timestamp: 'May 4, 2025' },
+    { author: 'Cindy', message: 'Let’s plan a co-op session this weekend!', timestamp: 'May 3, 2025' },
+  ];
 
   useEffect(() => {
     fetch('/api/community')
@@ -67,7 +79,19 @@ const CommunityFeed = () => {
 
       <div style={{ marginTop: '20px', color: 'white' }}>
         {activeTab === 'Feed' ? (
-          <p>Feed (content coming soon...)</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            {communityPosts.map((post, index) => (
+              <div key={index} style={{
+                backgroundColor: '#2c3e50',
+                padding: '15px',
+                borderRadius: '8px',
+              }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '4px' }}>{post.author}</p>
+                <p>{post.message}</p>
+                <p style={{ fontSize: '0.8rem', color: '#ccc', marginTop: '8px' }}>{post.timestamp}</p>
+              </div>
+            ))}
+          </div>
         ) : (
           <div>
             <h3>{community?.name ?? 'Loading...'}</h3>
