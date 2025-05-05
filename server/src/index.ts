@@ -10,6 +10,7 @@ import popularGamesRoute from './routes/game';
 import serviceRoutes from './routes/service';
 import messageRoutes from './routes/message';
 import steamRoutes from './routes/steam';
+import gameDetailsRoute from './routes/gamedetail';
 
 dotenv.config();
 
