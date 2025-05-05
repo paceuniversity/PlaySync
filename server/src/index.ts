@@ -12,6 +12,7 @@ import messageRoutes from './routes/message';
 import steamRoutes from './routes/steam';
 import riotRoutes from './routes/riot';
 import communityRoutes from './routes/commnity';
+import gameRoute from './routes/gameRoute';
 
 
 dotenv.config();
@@ -36,7 +37,7 @@ app.use('/api/message', messageRoutes);
 app.use('/api/steam', steamRoutes);
 app.use('/api/riot', riotRoutes);
 app.use('/api', communityRoutes);
-
+app.use('/api', gameRoute);
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}/api/docs`);

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-type Game     = { name: string; coverUrl: string | null };
+type Game = { id: number; name: string; coverUrl: string | null };
 type Category = { label: string; games: Game[] };
 
 const Products: React.FC = () => {
@@ -8,30 +9,17 @@ const Products: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('http://localhost:3000/api/popular-games');
-        if (!res.ok) throw new Error(`Server responded ${res.status}`);
-        const data = await res.json();
-        if (!Array.isArray(data.categories)) {
-          console.error('Unexpected payload:', data);
-          throw new Error('Invalid API response');
-        }
-        setCategories(data.categories);
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message);
-      }
-    })();
+    fetch('http://localhost:3000/api/popular-games')
+      .then(res => res.json())
+      .then(data => setCategories(data.categories))
+      .catch(err => {
+        console.error('Fetch failed:', err);
+        setError('Failed to load games');
+      });
   }, []);
 
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
-
-  if (categories.length === 0) {
-    return <div className="text-white">Loading…</div>;
-  }
+  if (error) return <div className="text-red-500">Error: {error}</div>;
+  if (!categories.length) return <div className="text-white">Loading…</div>;
 
   return (
     <div className="container mt-4">
@@ -46,32 +34,47 @@ const Products: React.FC = () => {
               paddingBottom: '1rem',
             }}
           >
-            {games.map((game, idx) => (
-              <div
-                key={idx}
-                style={{
-                  minWidth: '200px',
-                  flexShrink: 0,
-                  background: '#2a2f36',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  textAlign: 'center',
-                  color: 'white',
-                }}
+            {games.map((game) => (
+              <Link
+                key={game.id}
+                to={`/game/${game.id}`}
+                style={{ textDecoration: 'none' }}
               >
-                {game.coverUrl ? (
-                  <img
-                    src={game.coverUrl}
-                    alt={game.name}
-                    style={{ width: '100%', borderRadius: '8px' }}
-                  />
-                ) : (
-                  <div className="text-gray-500">No Image</div>
-                )}
-                <div style={{ marginTop: '8px', fontWeight: 'bold' }}>
-                  {game.name}
+                <div
+                  style={{
+                    minWidth: '200px',
+                    background: '#2a2f36',
+                    padding: '10px',
+                    borderRadius: '10px',
+                    textAlign: 'center',
+                    color: 'white',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  }}
+                  onMouseEnter={e => {
+                    const el = e.currentTarget as HTMLDivElement;
+                    el.style.transform = 'scale(1.05)';
+                    el.style.boxShadow = '0 4px 20px rgba(255, 255, 255, 0.2)';
+                  }}
+                  onMouseLeave={e => {
+                    const el = e.currentTarget as HTMLDivElement;
+                    el.style.transform = 'scale(1)';
+                    el.style.boxShadow = 'none';
+                  }}
+                >
+                  {game.coverUrl ? (
+                    <img
+                      src={game.coverUrl}
+                      alt={game.name}
+                      style={{ width: '100%', borderRadius: '8px' }}
+                    />
+                  ) : (
+                    <div className="text-gray-500">No Image</div>
+                  )}
+                  <div style={{ marginTop: '8px', fontWeight: 'bold' }}>
+                    {game.name}
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

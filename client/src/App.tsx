@@ -1,7 +1,7 @@
 import './css/App.css';
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, Router, useLocation } from 'react-router-dom';
 import { UserProvider } from './context/UserProfileContext';
 import { FriendProvider } from './context/PublicProfileContext';
 import Dashboard from './pages/Dashboard';
@@ -14,6 +14,7 @@ import ClientProfile from './pages/ClientProfile';
 import UserProfile from './pages/UserProfile';
 import ClientCommunity from './pages/ClientCommunity';
 import CreateCommunityPage from './pages/CreateCommunity';
+import GameDetails from './pages/GameDetails';
 
 function App() {
   const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ function App() {
         <Route path="/direct-message" element={<DirectMessage />} />
         <Route path="/community" element={<ClientCommunity />} />
         <Route path="/create-community" element={<CreateCommunityPage />} />
+        <Route path="/game/:id" element={<GameDetails />} />
       </Routes>
     </QueryClientProvider>
   );
