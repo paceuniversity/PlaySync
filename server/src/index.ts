@@ -31,6 +31,7 @@ app.use('/api/search', serviceRoutes);
 app.use('/api/popular-games', popularGamesRoute);
 app.use('/api/message', messageRoutes);
 app.use('/api/steam', steamRoutes);
+app.use('/api/popular-games', popularGamesRoute);
 
 
 app.listen(PORT, () => {
