@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { fetchAccessToken } from '../utils/igdb';
+import { fetchAccessToken } from '../utils/igdb'; 
 
 const gameRoute = Router();
 
