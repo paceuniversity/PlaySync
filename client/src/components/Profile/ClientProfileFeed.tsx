@@ -63,63 +63,93 @@ const ProfileFeed = () => {
     const fetchGames = async () => {
       try {
         setIsLoading(true);
+        console.log('🚀 Fetching user data with userId:', userId);
+
         const userRes = await useAxios.get(`auth/${userId}`);
         const { steamId, riotId } = userRes.data.data;
+
+        console.log('🧾 User info response:', userRes.data);
+        console.log('🆔 steamId:', steamId, '| riotId:', riotId);
 
         const promises = [];
 
         if (steamId) {
+          const steamUrl = `steam/games/${steamId}`;
+          console.log('🎮 Attempting to fetch Steam games from:', steamUrl);
+
           promises.push(
-            useAxios.get(`steam/games/${steamId}`).then((res) =>
-              (res.data.games || []).map(
-                (g: {
-                  appid: number;
-                  name: string;
-                  playtime_forever: number;
-                }) => ({
-                  type: 'steam',
-                  id: String(g.appid),
-                  name: g.name,
-                  platform: 'Steam',
-                  imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
-                  details: `Hours played: ${(g.playtime_forever / 60).toFixed(
-                    1
-                  )} hrs`,
-                })
-              )
-            )
+            useAxios
+              .get(steamUrl)
+              .then((res) => {
+                console.log('✅ Steam API raw response:', res);
+                console.log('📦 Steam API data.games:', res.data.games);
+
+                if (!res.data.games || res.data.games.length === 0) {
+                  console.warn('⚠️ No games found in Steam API response.');
+                }
+
+                return (res.data.games || []).map(
+                  (g: {
+                    appid: number;
+                    name: string;
+                    playtime_forever: number;
+                  }) => ({
+                    type: 'steam',
+                    id: String(g.appid),
+                    name: g.name,
+                    platform: 'Steam',
+                    imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
+                    details: `Hours played: ${(g.playtime_forever / 60).toFixed(
+                      1
+                    )} hrs`,
+                  })
+                );
+              })
+              .catch((err) => {
+                console.error('❌ Steam API fetch failed:', err);
+                if (err.response) {
+                  console.error(
+                    '🔴 Steam error response data:',
+                    err.response.data
+                  );
+                  console.error('🔴 Status:', err.response.status);
+                  console.error('🔴 Headers:', err.response.headers);
+                } else if (err.request) {
+                  console.error(
+                    '❌ No response received from Steam API:',
+                    err.request
+                  );
+                } else {
+                  console.error('❌ Unknown error:', err.message);
+                }
+                return []; // Ensure the promise resolves to an empty array on error
+              })
           );
         }
 
-        if (riotId) {
-          promises.push(
-            useAxios.get(`riot/matches/${riotId}`).then((res) =>
-              (res.data.matches || []).map(
-                (match: {
-                  metadata: { matchId: string };
-                  info: { gameMode: string };
-                }) => ({
-                  type: 'riot',
-                  id: match.metadata.matchId,
-                  name: `Match ID: ${match.metadata.matchId}`,
-                  platform: 'Riot',
-                  details: `Game Mode: ${match.info.gameMode}`,
-                })
-              )
-            )
-          );
-        }
+        // Riot block removed since it's ignored now
 
         const results = await Promise.all(promises);
         const combined = results.flat();
 
+        console.log('🧩 Combined game list:', combined);
+        console.log('📈 Number of games fetched:', combined.length);
+
         setGames(combined);
-        console.log('✅ setGames was called, combined:', combined);
+
         setTimeout(() => {
-          console.log('🧪 games state after setGames():', games); // This will still show old value (stale) due to async
+          console.log('🧪 games state after setGames():', games);
         }, 500);
-      } catch (err) {
-        console.error('Error fetching games:', err);
+      } catch (err: any) {
+        console.error('❌ Fatal error in fetchGames():', err);
+        if (err.response) {
+          console.error('🔴 Error response:', err.response.data);
+          console.error('🔴 Status:', err.response.status);
+        } else if (err.request) {
+          console.error('❌ No response received:', err.request);
+        } else {
+          console.error('❌ Error Message:', err.message);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -128,7 +158,7 @@ const ProfileFeed = () => {
     if (userId) {
       fetchGames();
     }
-  }, [userId, games]);
+  }, [userId]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const gamesPerPage = 10;
