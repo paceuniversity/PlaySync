@@ -16,7 +16,8 @@ gameRoute.get('/games/:id', async (req: Request, res: any) => {
         'Content-Type': 'text/plain',
       },
       body: `
-        fields name, summary, cover.url, genres.name, platforms.name, first_release_date;
+        fields name, summary, cover.url, genres.name, platforms.name, first_release_date, 
+        rating, involved_companies.company.name, url, websites.url, videos.video_id;
         where id = ${id};
       `,
     });
@@ -42,6 +43,11 @@ gameRoute.get('/games/:id', async (req: Request, res: any) => {
         genres: game.genres?.map((g: any) => g.name),
         platforms: game.platforms?.map((p: any) => p.name),
         releaseDate: game.first_release_date,
+        rating: game.rating,
+        companies: game.involved_companies?.map((c: any) => c.company?.name),
+        igdbUrl: game.url,
+        websites: game.websites?.map((w: any) => w.url),
+        videoId: game.videos?.length ? game.videos[0].video_id : null,
       },
     });
   } catch (err) {

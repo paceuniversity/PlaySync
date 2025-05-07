@@ -24,6 +24,24 @@
   font-size: calc(10px + 2vmin);
 }
 
+.link-list {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.info-block {
+  color: #0cece1;
+  background-color: #031316;
+  padding: 1.5rem;
+  border-radius: 10px;
+  max-width: 600px;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
