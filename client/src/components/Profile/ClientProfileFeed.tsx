@@ -71,16 +71,22 @@ const ProfileFeed = () => {
         if (steamId) {
           promises.push(
             useAxios.get(`steam/games/${steamId}`).then((res) =>
-              (res.data.games || []).map((g: { appid: number; name: string; playtime_forever: number }) => ({
-                type: 'steam',
-                id: String(g.appid),
-                name: g.name,
-                platform: 'Steam',
-                imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
-                details: `Hours played: ${(g.playtime_forever / 60).toFixed(
-                  1
-                )} hrs`,
-              }))
+              (res.data.games || []).map(
+                (g: {
+                  appid: number;
+                  name: string;
+                  playtime_forever: number;
+                }) => ({
+                  type: 'steam',
+                  id: String(g.appid),
+                  name: g.name,
+                  platform: 'Steam',
+                  imageUrl: `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
+                  details: `Hours played: ${(g.playtime_forever / 60).toFixed(
+                    1
+                  )} hrs`,
+                })
+              )
             )
           );
         }
@@ -88,20 +94,30 @@ const ProfileFeed = () => {
         if (riotId) {
           promises.push(
             useAxios.get(`riot/matches/${riotId}`).then((res) =>
-              (res.data.matches || []).map((match: { metadata: { matchId: string }; info: { gameMode: string } }) => ({
-                type: 'riot',
-                id: match.metadata.matchId,
-                name: `Match ID: ${match.metadata.matchId}`,
-                platform: 'Riot',
-                details: `Game Mode: ${match.info.gameMode}`,
-              }))
+              (res.data.matches || []).map(
+                (match: {
+                  metadata: { matchId: string };
+                  info: { gameMode: string };
+                }) => ({
+                  type: 'riot',
+                  id: match.metadata.matchId,
+                  name: `Match ID: ${match.metadata.matchId}`,
+                  platform: 'Riot',
+                  details: `Game Mode: ${match.info.gameMode}`,
+                })
+              )
             )
           );
         }
 
         const results = await Promise.all(promises);
         const combined = results.flat();
+
         setGames(combined);
+        console.log('✅ setGames was called, combined:', combined);
+        setTimeout(() => {
+          console.log('🧪 games state after setGames():', games); // This will still show old value (stale) due to async
+        }, 500);
       } catch (err) {
         console.error('Error fetching games:', err);
       } finally {
@@ -112,7 +128,7 @@ const ProfileFeed = () => {
     if (userId) {
       fetchGames();
     }
-  }, [userId]);
+  }, [userId, games]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const gamesPerPage = 10;
