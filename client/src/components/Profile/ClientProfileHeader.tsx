@@ -9,6 +9,7 @@ import { IoLogOut } from 'react-icons/io5';
 import { useAxios } from '../../hooks/useAxios';
 import { useNavigate } from 'react-router-dom';
 
+
 const ProfileHeader = () => {
   const profileImage = profilePicture;
   const user = useUser();

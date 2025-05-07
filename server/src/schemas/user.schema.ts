@@ -9,8 +9,14 @@ export interface IUser {
   steamId?: string;
   xboxId?: string;
   riotId?: string;
-  twitchId?: string;
-  youtubeId?: string;
+  twitchAccount?: {
+    username: string;
+    profileUrl: string;
+  };
+  youtubeAccount?: {
+    channelId: string;
+    channelUrl: string;
+  };
   linkedAccounts?: string[];
   numOfGames?: number;
   numOfFriends: number;
