@@ -13,7 +13,7 @@ interface SteamProfile {
 }
 
 const steamRoutes = express.Router();
-const STEAM_API_KEY = '3BD5BF4E0C45D545CC8861D6351840E7';
+const STEAM_API_KEY = '0E69D3D47AF104D00E37590A959CF01E';
 const SESSION_SECRET = 'S9dK3!vG82f$z@1r4zLQp8MvNtXj62Yw';
 
 declare module 'express-session' {
@@ -192,6 +192,9 @@ steamRoutes.get('/games/:steamId', async (req: Request, res: any) => {
   const { steamId } = req.params;
 
   try {
+    console.log('[STEAM ROUTE] Steam ID:', steamId);
+    console.log('[STEAM ROUTE] Using API key:', STEAM_API_KEY);
+
     const response = await axios.get(
       'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
       {
@@ -207,6 +210,10 @@ steamRoutes.get('/games/:steamId', async (req: Request, res: any) => {
     const games = response.data.response.games || [];
     res.json({ games });
   } catch (error) {
+    console.error(
+      '[STEAM ROUTE] Error from Steam:',
+      (error as any)?.response?.data
+    );
     res.status(500).json({ error: 'Failed to fetch owned games' });
   }
 });
