@@ -55,6 +55,6 @@ PlaySync brings together all your gaming profiles from platforms like Steam, Xbo
 
 ## Final delivery
 
-- [Final presentation]()
-- [Poster]()
+- [Final presentation](https://docs.google.com/presentation/d/1JXQnuT8sd0wxuoZ-3_SnM4oKcuyarQ4aGHxvlfzQ_UI/edit?usp=sharing)
+- [Poster](https://drive.google.com/file/d/1zXKGIv-vj5ln1bXNHVlD_cUy5-ul7GPW/view?usp=sharing)
 - [Process description]()
