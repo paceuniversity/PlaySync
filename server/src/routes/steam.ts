@@ -13,8 +13,8 @@ interface SteamProfile {
 }
 
 const steamRoutes = express.Router();
-const STEAM_API_KEY = '0E69D3D47AF104D00E37590A959CF01E';
-const SESSION_SECRET = 'S9dK3!vG82f$z@1r4zLQp8MvNtXj62Yw';
+const STEAM_API_KEY = 'STEAM API';
+const SESSION_SECRET = 'STEAM SECRET';
 
 declare module 'express-session' {
   interface SessionData {
