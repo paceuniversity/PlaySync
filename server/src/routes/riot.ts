@@ -4,7 +4,7 @@ import { db } from '../firebase/firebase';
 import admin from 'firebase-admin';
 
 const riotRoutes = express.Router();
-const RIOT_API_KEY = 'RGAPI-add7439a-c137-485a-b3c9-9aae69edc2f3';
+const RIOT_API_KEY = 'RIOT KEY';
 
 /**
  * @swagger
