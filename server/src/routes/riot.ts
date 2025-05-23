@@ -62,7 +62,13 @@ riotRoutes.post('/connect', async (req: Request, res: any) => {
   }
 
   try {
-    const response = await axios.get(
+    interface RiotAccountResponse {
+      puuid: string;
+      gameName: string;
+      tagLine: string;
+    }
+
+    const response = await axios.get<RiotAccountResponse>(
       `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${username}/${tag}`,
       {
         headers: {
@@ -121,7 +127,7 @@ riotRoutes.post('/connect', async (req: Request, res: any) => {
 
 /**
  * @swagger
- * /riot/matches/{puuid}:
+ * /riot/{puuid}:
  *   get:
  *     summary: Fetch recent match history for a Riot user
  *     tags: [Riot]
@@ -160,7 +166,7 @@ riotRoutes.get('/matches/:puuid', async (req, res) => {
       }
     );
 
-    const matchIds = matchIdsResponse.data;
+    const matchIds = matchIdsResponse.data as string[];
 
     const matchDetails = await Promise.all(
       matchIds.map((id: string) =>

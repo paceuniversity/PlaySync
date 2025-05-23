@@ -9,6 +9,7 @@ export interface IUser {
   steamId?: string;
   xboxId?: string;
   riotId?: string;
+  twitchId?: string;
   twitchAccount?: {
     username: string;
     profileUrl: string;
