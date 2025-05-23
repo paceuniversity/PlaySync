@@ -9,7 +9,7 @@ const Products: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/popular-games')
+    fetch('https://playsync-production.up.railway.app/api/popular-games')
       .then((res) => res.json())
       .then((data) => setCategories(data.categories))
       .catch((err) => {

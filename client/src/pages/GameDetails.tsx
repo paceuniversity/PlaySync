@@ -2,20 +2,40 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import '../css/App.css';
 
+interface GameData {
+  name: string;
+  coverUrl?: string;
+  summary?: string;
+  rating?: number;
+  genres?: string[];
+  platforms?: string[];
+  companies?: string[];
+  releaseDate?: number;
+  igdbUrl?: string;
+  websites?: string[];
+  videoId?: string;
+}
+
 const GameDetails: React.FC = () => {
   const { id } = useParams();
-  const [gameData, setGameData] = useState<any>(null);
+  const [gameData, setGameData] = useState<GameData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`http://localhost:3000/api/games/${id}`);
+        const res = await fetch(
+          `https://playsync-production.up.railway.app/api/games/${id}`
+        );
         if (!res.ok) throw new Error(`Failed to fetch game ${id}`);
         const data = await res.json();
         setGameData(data.game);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred.');
+        }
       }
     })();
   }, [id]);
@@ -40,13 +60,13 @@ const GameDetails: React.FC = () => {
         {gameData.rating && (
           <p><strong style={{ color: '#61dafb' }}>Rating:</strong> {gameData.rating.toFixed(1)} / 100</p>
         )}
-        {gameData.genres?.length > 0 && (
+        {Array.isArray(gameData.genres) && gameData.genres.length > 0 && (
           <p><strong style={{ color: '#61dafb' }}>Genres:</strong> {gameData.genres.join(', ')}</p>
         )}
-        {gameData.platforms?.length > 0 && (
+        {Array.isArray(gameData.platforms) && gameData.platforms.length > 0 && (
           <p><strong style={{ color: '#61dafb' }}>Platforms:</strong> {gameData.platforms.join(', ')}</p>
         )}
-        {gameData.companies?.length > 0 && (
+        {Array.isArray(gameData.companies) && gameData.companies.length > 0 && (
           <p><strong style={{ color: '#61dafb' }}>Companies:</strong> {gameData.companies.join(', ')}</p>
         )}
         {gameData.releaseDate && (
@@ -60,7 +80,7 @@ const GameDetails: React.FC = () => {
             </a>
           </p>
         )}
-        {gameData.websites?.length > 0 && (
+        {Array.isArray(gameData.websites) && gameData.websites.length > 0 && (
           <div className="link-list">
             <strong style={{ color: '#61dafb' }}>Websites:</strong>
             <ul>

@@ -113,7 +113,7 @@ const ClientProfileSettings: React.FC = () => {
       toast.error('You must be logged in to connect Steam');
       return;
     }
-    window.location.href = `http://localhost:3000/api/steam/steam?userId=${userId}`;
+    window.location.href = `https://playsync-production.up.railway.app/api/steam/steam?userId=${userId}`;
   };
 
   const [riotUsername, setRiotUsername] = useState('');
