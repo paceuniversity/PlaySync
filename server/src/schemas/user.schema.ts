@@ -9,6 +9,7 @@ export interface IUser {
   steamId?: string;
   xboxId?: string;
   riotId?: string;
+  youtubeId?: string;
   twitchId?: string;
   twitchAccount?: {
     username: string;

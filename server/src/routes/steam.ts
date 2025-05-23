@@ -207,7 +207,8 @@ steamRoutes.get('/games/:steamId', async (req: Request, res: any) => {
       }
     );
 
-    const games = response.data.response.games || [];
+    const data = response.data as { response: { games?: any[] } };
+    const games = data.response.games || [];
     res.json({ games });
   } catch (error) {
     console.error(
