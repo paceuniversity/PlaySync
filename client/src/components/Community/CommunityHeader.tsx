@@ -50,7 +50,7 @@ const CommunityHeader: React.FC<{ communityId: string }> = ({
       setIsMember(true);
       setMemberCount((prev) => prev + 1);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       toast.error('Failed to join community.');
     }
   };

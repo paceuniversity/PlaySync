@@ -27,7 +27,7 @@ const CreateCommunityPage = () => {
 
       toast.success('Community created successfully!');
       console.log(res);
-      // navigate(`/community/${res.data.communityId}`);
+
       navigate(`/community`);
     } catch (err) {
       console.error(err);

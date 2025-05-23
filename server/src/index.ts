@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
 import './firebase/firebase';
@@ -11,10 +13,8 @@ import serviceRoutes from './routes/service';
 import messageRoutes from './routes/message';
 import steamRoutes from './routes/steam';
 import riotRoutes from './routes/riot';
-import communityRoutes from './routes/commnity';
+import communityRoutes from './routes/community';
 import gameRoute from './routes/gameRoute';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

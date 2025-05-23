@@ -13,8 +13,9 @@ interface SteamProfile {
 }
 
 const steamRoutes = express.Router();
-const STEAM_API_KEY = 'STEAM API';
-const SESSION_SECRET = 'STEAM SECRET';
+
+const STEAM_API_KEY = process.env.STEAM_API_KEY!;
+const SESSION_SECRET = process.env.SESSION_SECRET!;
 
 declare module 'express-session' {
   interface SessionData {
@@ -42,7 +43,12 @@ passport.use(
       apiKey: STEAM_API_KEY,
       passReqToCallback: true,
     },
-    async (req, identifier, profile: ExtendedSteamProfile, done) => {
+    async (
+      req: { session: any },
+      _identifier: any,
+      profile: ExtendedSteamProfile,
+      done: (arg0: null, arg1: ExtendedSteamProfile) => any
+    ) => {
       profile.sessionUserId = (req.session as any).userId;
       return done(null, profile);
     }
@@ -88,7 +94,7 @@ steamRoutes.get(
     }
 
     req.session.userId = userId;
-    console.log('Session set:', req.session);
+
     next();
   },
   passport.authenticate('steam')
@@ -98,9 +104,6 @@ steamRoutes.get(
   '/return',
   passport.authenticate('steam', { failureRedirect: '/' }),
   async (req: Request, res: any) => {
-    console.log('Session on return:', req.session);
-    console.log('User ID in session:', req.session.userId);
-
     const steamProfile = req.user as ExtendedSteamProfile;
 
     const userId = steamProfile.sessionUserId || req.session.userId;
@@ -192,9 +195,6 @@ steamRoutes.get('/games/:steamId', async (req: Request, res: any) => {
   const { steamId } = req.params;
 
   try {
-    console.log('[STEAM ROUTE] Steam ID:', steamId);
-    console.log('[STEAM ROUTE] Using API key:', STEAM_API_KEY);
-
     const response = await axios.get(
       'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
       {

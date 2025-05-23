@@ -63,27 +63,19 @@ const ProfileFeed = () => {
     const fetchGames = async () => {
       try {
         setIsLoading(true);
-        console.log('🚀 Fetching user data with userId:', userId);
 
         const userRes = await useAxios.get(`auth/${userId}`);
-        const { steamId, riotId } = userRes.data.data;
-
-        console.log('🧾 User info response:', userRes.data);
-        console.log('🆔 steamId:', steamId, '| riotId:', riotId);
+        const { steamId } = userRes.data.data;
 
         const promises = [];
 
         if (steamId) {
           const steamUrl = `steam/games/${steamId}`;
-          console.log('🎮 Attempting to fetch Steam games from:', steamUrl);
 
           promises.push(
             useAxios
               .get(steamUrl)
               .then((res) => {
-                console.log('✅ Steam API raw response:', res);
-                console.log('📦 Steam API data.games:', res.data.games);
-
                 if (!res.data.games || res.data.games.length === 0) {
                   console.warn('⚠️ No games found in Steam API response.');
                 }
@@ -122,33 +114,41 @@ const ProfileFeed = () => {
                 } else {
                   console.error('❌ Unknown error:', err.message);
                 }
-                return []; // Ensure the promise resolves to an empty array on error
+                return [];
               })
           );
         }
 
-        // Riot block removed since it's ignored now
-
         const results = await Promise.all(promises);
         const combined = results.flat();
 
-        console.log('🧩 Combined game list:', combined);
-        console.log('📈 Number of games fetched:', combined.length);
-
         setGames(combined);
-
-        setTimeout(() => {
-          console.log('🧪 games state after setGames():', games);
-        }, 500);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('❌ Fatal error in fetchGames():', err);
-        if (err.response) {
-          console.error('🔴 Error response:', err.response.data);
-          console.error('🔴 Status:', err.response.status);
-        } else if (err.request) {
-          console.error('❌ No response received:', err.request);
+        if (typeof err === 'object' && err !== null && 'response' in err) {
+          const errorWithResponse = err as { response: unknown };
+          const response = errorWithResponse.response as {
+            data?: unknown;
+            status?: unknown;
+          };
+          console.error('🔴 Error response:', response.data);
+          console.error('🔴 Status:', response.status);
+        } else if (
+          typeof err === 'object' &&
+          err !== null &&
+          'request' in err
+        ) {
+          const errorWithRequest = err as { request: unknown };
+          console.error('❌ No response received:', errorWithRequest.request);
+        } else if (
+          typeof err === 'object' &&
+          err !== null &&
+          'message' in err
+        ) {
+          const errorWithMessage = err as { message: string };
+          console.error('❌ Error Message:', errorWithMessage.message);
         } else {
-          console.error('❌ Error Message:', err.message);
+          console.error('❌ Unknown error:', err);
         }
       } finally {
         setIsLoading(false);
